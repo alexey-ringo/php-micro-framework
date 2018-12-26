@@ -1,0 +1,6 @@
+/node_modules
+/vendor
+/phpunit.xml
+/public/build
+/_node_modules
+/_vendor
