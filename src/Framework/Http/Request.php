@@ -7,7 +7,7 @@ class Request {
         return $_GET;
     }
     
-    public function getParseBody() {
+    public function getParsedBody() {
         //Если в body не пришли данные - то null
         return $_POST ?: null;
     }

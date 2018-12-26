@@ -2,5 +2,4 @@
 /vendor
 /phpunit.xml
 /public/build
-/_node_modules
-/_vendor
+/_README.md
