@@ -1,7 +1,7 @@
 <?php
 namespace Framework\Http;
 
-class Request {
+class Request implements ServerRequestInterface {
     
     private $queryParams;
     private $parsedBody;
@@ -18,13 +18,13 @@ class Request {
     public function withQueryParams(array $query): self {
             //Для иммутабельности объекта
             //Любой новый вызов withQueryParams() не меняет сущ. объект, а создает его клон
-        //$new = clone $this;
+        $new = clone $this;
             //private переменные равнодоступны внутри класса для всех объектов этого класса
-        //$new->$queryParams = $query;
-        //return $new;
+        $new->queryParams = $query;
+        return $new;
             
-        $this->queryParams = $query;
-        return $this;
+        //$this->queryParams = $query;
+        //return $this;
     }
     
     public function getParsedBody() {
@@ -32,11 +32,11 @@ class Request {
     }
     
     public function withParsedBody($data): self {
-        //$new = clone $this;
-        //$new->parsedBody = $data;
-        //return $new;
+        $new = clone $this;
+        $new->parsedBody = $data;
+        return $new;
         
-        $this->parsedBody = $data;
-        return $this;
+        //$this->parsedBody = $data;
+        //return $this;
     }
 }
