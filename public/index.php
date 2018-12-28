@@ -1,21 +1,34 @@
 <?php
+//Вкл вывод ошибок
+ini_set('display_errors', 1);
+//Активировали лог ошибок в полном режиме
+error_reporting(E_ALL);
 
-use Framework\Http\RequestFactory;
-use Framework\Http\Response;
+use Zend\Diactoros\Response\HtmlResponse;
+//use Zend\Diactoros\Response\SapiEmitter;
+use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
+use Zend\Diactoros\ServerRequestFactory;
 
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
-$request = RequestFactory::fromGlobals();
+### Initialization
+$request = ServerRequestFactory::fromGlobals();
 
+### Preprocessing
+//Если в запросе есть заголокок 'Content-Type' и в нем есть строка '#json#1'
+//То перекодируем его в массив withParsedBody
+//if(preg_match('#json#1', $request->getHeader('Content-Type'))) {
+//    $request = $request->withParsedBody(json_decode($request->getBody()->getContents()));
+//}
+
+### Action
 $name = $request->getQueryParams()['name'] ?? 'Guest';
+$response = new HtmlResponse('Hello, ' . $name . '!');
 
-$response = (new Response('Hello ' . $name . '!'))
-            ->withHeader('X-Developer', 'Alex_Ringo2');
+### Postprocessing
+$response = $response->withHeader('X-Developer', 'Alex_Ringo');
 
-header('HTTP/1.0' . $response->getStatusCode() . ' ' . $response->getReasonPhrase());
-
-foreach($response->getHeaders() as $name => $value) {
-    header($name . ':' . $value);
-}
-echo $response->getBody();
+### Sending
+$emitter = new SapiEmitter();
+$emitter->emit($response);
