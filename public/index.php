@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 use Zend\Diactoros\Response\HtmlResponse;
+use Zend\Diactoros\Response\JsonResponse;
 //use Zend\Diactoros\Response\SapiEmitter;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
@@ -29,7 +30,26 @@ if ($path === '/') {
     $response = new HtmlResponse('Hello, ' . $name . '!');
 } elseif ($path === '/about') {
     $response = new HtmlResponse('I am a simple site');
-} else {
+    
+    //Возвращаем список существующих постов
+} elseif ($path === '/blog') {
+    $response = new JsonResponse([
+        ['id' => 2, 'title' => 'The Second Post'],
+        ['id' => 1, 'title' => 'The First Post'],
+    ]);
+    
+//Вычисление регуляркой числового значения после blog/... 
+//и присваиваение его параметру, именнованному как id    
+} elseif (preg_match('#^/blog/(?P<id>\d+)$#i', $path, $matches)) {
+    $id = $matches['id'];
+    if ($id > 2) {
+        $response = new JsonResponse(['error' => 'Undefined page'], 404);
+    } else {
+        $response = new JsonResponse(['id' => $id, 'title' => 'Post #' . $id]);
+    }
+}
+
+else {
     $response = new HtmlResponse('Undefined page', 404);
 }
 
