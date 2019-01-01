@@ -2,4 +2,9 @@
 /vendor
 /phpunit.xml
 /public/build
-/_README.md
+_README.md
+/.vagrant
+/nbproject
+/puphpet
+Vagrantfile
+.gitattributes
