@@ -4,6 +4,10 @@ ini_set('display_errors', 1);
 //Активировали лог ошибок в полном режиме
 error_reporting(E_ALL);
 
+use Framework\Http\Router\Exception\RequestNotMatchedException;
+use Framework\Http\Router\RouteCollection;
+use Framework\Http\Router\Router;
+
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\JsonResponse;
@@ -15,59 +19,61 @@ chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
 ### Initialization
+
+//Создаем коллекцию маршрутов
+$routes = new RouteCollection();
+
+//И заполняем ее записями о трех маршрутах
+//К каждому привязана соответствующая анонимная функция со своим обработчиком
+
+$routes->get('home', '/', function (ServerRequestInterface $request) {
+    $name = $request->getQueryParams()['name'] ?? 'Guest';
+    return new HtmlResponse('Hello, ' . $name . '!');
+});
+
+//$routes->get('home', '/', $anonim = 'function() {$handler = 0;}');
+$routes->get('about', '/about', function() {
+    return new HtmlResponse('I am a simple site');
+});
+
+$routes->get('blog', '/blog', function () {
+    return new JsonResponse([
+        ['id' => 2, 'title' => 'The Second Post'],
+        ['id' => 1, 'title' => 'The First Post'],
+    ]);
+});
+
+$routes->get('blog_show', '/blog/{id}', function (ServerRequestInterface $request) {
+    $id = $request->getAttribute('id');
+    if ($id > 2) {
+        return new HtmlResponse('Undefined page', 404);
+    }
+    return new JsonResponse(['id' => $id, 'title' => 'Post #' . $id]);
+}, ['id' => '\d+']);
+
+//Создаем экземпляр роутера и инициализируем его созданной коллекцией маршрутов
+$router = new Router($routes);
+
+### Running
+//Извлекаем $request из суперглобальных массивов $_GET и т.д.
 $request = ServerRequestFactory::fromGlobals();
-
-### Preprocessing
-//Если в запросе есть заголокок 'Content-Type' и в нем есть строка '#json#1'
-//То перекодируем его в массив withParsedBody
-//if(preg_match('#json#1', $request->getHeader('Content-Type'))) {
-//    $request = $request->withParsedBody(json_decode($request->getBody()->getContents()));
-//}
-
-### Action
-$path = $request->getUri()->getPath();
-$action = null;
-
-if ($path === '/') {
-    $action = function(ServerRequestInterface $request) {
-        $name = $request->getQueryParams()['name'] ?? 'Guest';
-        return new HtmlResponse('Hello, ' . $name . '!');
-    };
-} elseif ($path === '/about') {
-    $action = function() {
-        return new HtmlResponse('I am a simple site');
-    };
+try {
+    //И передаем его в роутер на сматчивание с соответствующим ему маршрутом
+    $result = $router->match($request);
     
-    //Возвращаем список существующих постов
-} elseif ($path === '/blog') {
-    $action = function() {
-        return new JsonResponse([
-            ['id' => 2, 'title' => 'The Second Post'],
-            ['id' => 1, 'title' => 'The First Post'],
-        ]);
-    };
-    
-//Вычисление регуляркой числового значения после blog/...  
-//и присваиваение его параметру, именнованному как id - в $matches   
-} elseif (preg_match('#^/blog/(?P<id>\d+)$#i', $path, $matches)) {
-    $request = $request->withAttribute('id', $matches['id']);
-    //Передали id в массиве пользовательских аттирбутов объекта $request
-    $action = function(ServerRequestInterface $request) {
-        //Получили id из аттрибутов $request
-        $id = $request->getAttribute('id');
-        if ($id > 2) {
-            return new JsonResponse(['error' => 'Undefined page'], 404);
-        } else {
-            return new JsonResponse(['id' => $id, 'title' => 'Post #' . $id]);
-        }
-    };
-}
-
-if($action) {
-    //Передаем соответствующий (выбранный в условиях) $request в анонимную функцию
+    //Если все успешно, то роутер вернет название маршрута, обработчик и аттрибуты
+    foreach($result->getAttributes() as $attribute => $value) {
+        //Проходим по всем аттрибутам и Примешиваем в реквест аттрибуты и их значения
+        $request = $request->withAttribute($attribute, $value);
+        
+        /** @var callable $action */
+        //Возвращает анонимную функцию-обработчик, привязанную к данному маршруту
+        $action = $result->getHandler();
+    }    
+    //Запускаем анонимную функцию, передавая в нее реквест с примешанными аттрибутами
     $response = $action($request);
-}
-else {
+    
+} catch (RequestNotMatchedException $ex) {
     $response = new HtmlResponse('Undefined page', 404);
 }
 
