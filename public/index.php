@@ -60,19 +60,18 @@ $request = ServerRequestFactory::fromGlobals();
 try {
     //И передаем его в роутер на сматчивание с соответствующим ему маршрутом
     $result = $router->match($request);
-    
+        
     //Если все успешно, то роутер вернет название маршрута, обработчик и аттрибуты
-    foreach($result->getAttributes() as $attribute => $value) {
+    foreach ($result->getAttributes() as $attribute => $value) {
         //Проходим по всем аттрибутам и Примешиваем в реквест аттрибуты и их значения
         $request = $request->withAttribute($attribute, $value);
-        
-        /** @var callable $action */
-        //Возвращает анонимную функцию-обработчик, привязанную к данному маршруту
-        $action = $result->getHandler();
-    }    
+    }
+    /** @var callable $action */
+    //Возвращает анонимную функцию-обработчик, привязанную к данному маршруту
+    $action = $result->getHandler();
+
     //Запускаем анонимную функцию, передавая в нее реквест с примешанными аттрибутами
     $response = $action($request);
-    
 } catch (RequestNotMatchedException $ex) {
     $response = new HtmlResponse('Undefined page', 404);
 }
