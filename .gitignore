@@ -8,4 +8,4 @@ _README.md
 /puphpet
 Vagrantfile
 .gitattributes
-_composer.phar
+composer.phar

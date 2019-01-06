@@ -6,16 +6,16 @@
  * and open the template in the editor.
  */
 
-namespace Framework\Http\Router;
+namespace Framework\Http\Router\Route;
 
+use Framework\Http\Router\Result;
 use Psr\Http\Message\ServerRequestInterface;
 /**
- * Description of Route
+ * Description of RegexpRoute
  *
  * @author alexringo
  */
-class Route {
-    
+class RegexpRoute implements RouteInterface {
     private $name;
     private $pattern;
     private $handler;    
