@@ -4,13 +4,11 @@ ini_set('display_errors', 1);
 //Активировали лог ошибок в полном режиме
 error_reporting(E_ALL);
 
+use App\Http\Action;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Framework\Http\Router\RouteCollection;
 use Framework\Http\Router\Router;
-
-use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\HtmlResponse;
-use Zend\Diactoros\Response\JsonResponse;
 //use Zend\Diactoros\Response\SapiEmitter;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
@@ -24,32 +22,16 @@ require 'vendor/autoload.php';
 $routes = new RouteCollection();
 
 //И заполняем ее записями о трех маршрутах
-//К каждому привязана соответствующая анонимная функция со своим обработчиком
+//Обработчики марштутов переложил из анонимных функций в отдельные классы
+//Объект класса с одной единственной функцией __invoke() 
 
-$routes->get('home', '/', function (ServerRequestInterface $request) {
-    $name = $request->getQueryParams()['name'] ?? 'Guest';
-    return new HtmlResponse('Hello, ' . $name . '!');
-});
+$routes->get('home', '/', new Action\HelloAction());
 
-//$routes->get('home', '/', $anonim = 'function() {$handler = 0;}');
-$routes->get('about', '/about', function() {
-    return new HtmlResponse('I am a simple site');
-});
+$routes->get('about', '/about', new Action\AboutAction());
 
-$routes->get('blog', '/blog', function () {
-    return new JsonResponse([
-        ['id' => 2, 'title' => 'The Second Post'],
-        ['id' => 1, 'title' => 'The First Post'],
-    ]);
-});
+$routes->get('blog', '/blog', new Action\Blog\IndexAction());
 
-$routes->get('blog_show', '/blog/{id}', function (ServerRequestInterface $request) {
-    $id = $request->getAttribute('id');
-    if ($id > 2) {
-        return new HtmlResponse('Undefined page', 404);
-    }
-    return new JsonResponse(['id' => $id, 'title' => 'Post #' . $id]);
-}, ['id' => '\d+']);
+$routes->get('blog_show', '/blog/{id}', new Action\Blog\ShowAction(), ['id' => '\d+']);
 
 //Создаем экземпляр роутера и инициализируем его созданной коллекцией маршрутов
 $router = new Router($routes);
