@@ -24,14 +24,14 @@ $routes = new RouteCollection();
 //И заполняем ее записями о трех маршрутах
 //Обработчики марштутов переложил из анонимных функций в отдельные классы
 //Объект класса с одной единственной функцией __invoke() 
+//Для универсализации - вместо создания объекта получаю строковое имя класса с обработчиком
+$routes->get('home', '/', Action\HelloAction::class);
 
-$routes->get('home', '/', new Action\HelloAction());
+$routes->get('about', '/about', Action\AboutAction::class);
 
-$routes->get('about', '/about', new Action\AboutAction());
+$routes->get('blog', '/blog', Action\Blog\IndexAction::class);
 
-$routes->get('blog', '/blog', new Action\Blog\IndexAction());
-
-$routes->get('blog_show', '/blog/{id}', new Action\Blog\ShowAction(), ['id' => '\d+']);
+$routes->get('blog_show', '/blog/{id}', Action\Blog\ShowAction::class, ['id' => '\d+']);
 
 //Создаем экземпляр роутера и инициализируем его созданной коллекцией маршрутов
 $router = new Router($routes);
@@ -48,9 +48,11 @@ try {
         //Проходим по всем аттрибутам и Примешиваем в реквест аттрибуты и их значения
         $request = $request->withAttribute($attribute, $value);
     }
+    //Получаем обработчик маршрута - в виде либо обхекта Closure либо обхекта класса либо строки с именем класса
+    $handler = $result->getHandler();
     /** @var callable $action */
-    //Возвращает анонимную функцию-обработчик, привязанную к данному маршруту
-    $action = $result->getHandler();
+    //В зависимости от типа $handler либо создаем объект класса с обработчиком (если строка с именем клссса) либо сразу вызываем Closure
+    $action = is_string($handler) ? new $handler() : $handler;
 
     //Запускаем анонимную функцию, передавая в нее реквест с примешанными аттрибутами
     $response = $action($request);
