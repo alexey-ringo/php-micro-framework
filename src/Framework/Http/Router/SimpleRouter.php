@@ -13,11 +13,11 @@ use Framework\Http\Router\Exception\RouteNotFoundException;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Description of Router
+ * Description of SimpleRouter
  *
  * @author alexringo
  */
-class Router {
+class SimpleRouter implements RouterInterface {
     
     private $routes;
     
@@ -30,7 +30,7 @@ class Router {
     public function match(ServerRequestInterface $request): Result {
         //Обходим все имеющиеся маршруты
         foreach ($this->routes->getRoutes() as $route) {
-            /** @var Route $route */
+            /** @var RegexpRoute $route */
             //Каждый маршрут отправляем на проматчивание в вынесенную в Route match()
             //если у маршрута совпали данные в request с условиями данного маршрута
             if ($result = $route->match($request)) {

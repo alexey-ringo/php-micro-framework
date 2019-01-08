@@ -8,7 +8,7 @@ use App\Http\Action;
 use Framework\Http\ActionResolver;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Framework\Http\Router\RouteCollection;
-use Framework\Http\Router\Router;
+use Framework\Http\Router\SimpleRouter;
 use Zend\Diactoros\Response\HtmlResponse;
 //use Zend\Diactoros\Response\SapiEmitter;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -35,7 +35,7 @@ $routes->get('blog', '/blog', Action\Blog\IndexAction::class);
 $routes->get('blog_show', '/blog/{id}', Action\Blog\ShowAction::class, ['id' => '\d+']);
 
 //Создаем экземпляр роутера и инициализируем его созданной коллекцией маршрутов
-$router = new Router($routes);
+$router = new SimpleRouter($routes);
 
 //Определяет тип обработчика (объект Closure или строка имени класса или еще что либо) и по разному его обрабатывает
 $resolver = new ActionResolver();
