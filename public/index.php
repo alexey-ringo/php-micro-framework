@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 use App\Http\Action;
+use Framework\Http\ActionResolver;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Framework\Http\Router\RouteCollection;
 use Framework\Http\Router\Router;
@@ -36,23 +37,27 @@ $routes->get('blog_show', '/blog/{id}', Action\Blog\ShowAction::class, ['id' => 
 //Создаем экземпляр роутера и инициализируем его созданной коллекцией маршрутов
 $router = new Router($routes);
 
+//Определяет тип обработчика (объект Closure или строка имени класса или еще что либо) и по разному его обрабатывает
+$resolver = new ActionResolver();
+
 ### Running
 //Извлекаем $request из суперглобальных массивов $_GET и т.д.
 $request = ServerRequestFactory::fromGlobals();
 try {
-    //И передаем его в роутер на сматчивание с соответствующим ему маршрутом
-    $result = $router->match($request);
-        
-    //Если все успешно, то роутер вернет название маршрута, обработчик и аттрибуты
+    //И передаем его в роутер на сматчивание с соответствующим ему маршрутом (парсим текущий маршрут)
+    $result = $router->match($request);        
+    //Если все успешно, то роутер вернет название маршрута, его обработчик и аттрибуты
+    
     foreach ($result->getAttributes() as $attribute => $value) {
         //Проходим по всем аттрибутам и Примешиваем в реквест аттрибуты и их значения
         $request = $request->withAttribute($attribute, $value);
     }
-    //Получаем обработчик маршрута - в виде либо обхекта Closure либо обхекта класса либо строки с именем класса
-    $handler = $result->getHandler();
+    
+    //Получаем обработчик из результатов маршрутизации и передаем его в объект AcrionResolver
+    //ActionResolver на основании анализа типа обработчика создаст и вернет нужный обработчик маршрута
     /** @var callable $action */
-    //В зависимости от типа $handler либо создаем объект класса с обработчиком (если строка с именем клссса) либо сразу вызываем Closure
-    $action = is_string($handler) ? new $handler() : $handler;
+    $action = $resolver->resolve($result->getHandler());
+    
 
     //Запускаем анонимную функцию, передавая в нее реквест с примешанными аттрибутами
     $response = $action($request);
