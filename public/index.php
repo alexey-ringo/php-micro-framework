@@ -6,9 +6,10 @@ error_reporting(E_ALL);
 
 use App\Http\Action;
 use Framework\Http\ActionResolver;
+use Framework\Http\Router\AuraRouterAdapter;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
-use Framework\Http\Router\RouteCollection;
-use Framework\Http\Router\SimpleRouter;
+//use Framework\Http\Router\RouteCollection;
+//use Framework\Http\Router\SimpleRouter;
 use Zend\Diactoros\Response\HtmlResponse;
 //use Zend\Diactoros\Response\SapiEmitter;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -19,8 +20,8 @@ require 'vendor/autoload.php';
 
 ### Initialization
 
-//Создаем коллекцию маршрутов
-$routes = new RouteCollection();
+$aura = new Aura\Router\RouterContainer();
+$routes = $aura->getMap();
 
 //И заполняем ее записями о трех маршрутах
 //Обработчики марштутов переложил из анонимных функций в отдельные классы
@@ -32,10 +33,10 @@ $routes->get('about', '/about', Action\AboutAction::class);
 
 $routes->get('blog', '/blog', Action\Blog\IndexAction::class);
 
-$routes->get('blog_show', '/blog/{id}', Action\Blog\ShowAction::class, ['id' => '\d+']);
+$routes->get('blog_show', '/blog/{id}', Action\Blog\ShowAction::class)->tokens(['id' => '\d+']);
 
-//Создаем экземпляр роутера и инициализируем его созданной коллекцией маршрутов
-$router = new SimpleRouter($routes);
+//
+$router = new AuraRouterAdapter($aura);
 
 //Определяет тип обработчика (объект Closure или строка имени класса или еще что либо) и по разному его обрабатывает
 $resolver = new ActionResolver();
