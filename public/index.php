@@ -19,6 +19,12 @@ chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
 ### Initialization
+$params = [
+    'users' => [
+        'admin' => 'adminpass',
+        'user' => 'userpass'
+        ],
+    ];
 //Создаем объект маршрутизатора-контейнера Аура
 $aura = new Aura\Router\RouterContainer();
 //Извлекаем из него объект коллекции маршрутов (карта маршрутов)
@@ -33,7 +39,7 @@ $routes->get('home', '/', Action\HelloAction::class);
 
 $routes->get('about', '/about', Action\AboutAction::class);
 
-$routes->get('cabinet', '/cabinet', Action\CabinetAction::class);
+$routes->get('cabinet', '/cabinet', new Action\CabinetAction($params['users']));
 
 $routes->get('blog', '/blog', Action\Blog\IndexAction::class);
 
