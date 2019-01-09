@@ -38,8 +38,11 @@ $routes = $aura->getMap();
 $routes->get('home', '/', Action\HelloAction::class);
 
 $routes->get('about', '/about', Action\AboutAction::class);
-
-$routes->get('cabinet', '/cabinet', new Action\CabinetAction($params['users']));
+//Упаковываем конкретный Action в общий декоратор аутентификации
+$routes->get('cabinet', '/cabinet', new Action\BasicAuthActionDecorator(
+    new Action\CabinetAction(),
+    $params['users']
+    ));
 
 $routes->get('blog', '/blog', Action\Blog\IndexAction::class);
 
