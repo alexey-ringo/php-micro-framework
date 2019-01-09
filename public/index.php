@@ -19,8 +19,10 @@ chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
 ### Initialization
-
+//Создаем объект маршрутизатора-контейнера Аура
 $aura = new Aura\Router\RouterContainer();
+//Извлекаем из него объект коллекции маршрутов (карта маршрутов)
+//это аналог нешего RouteCollection
 $routes = $aura->getMap();
 
 //И заполняем ее записями о трех маршрутах

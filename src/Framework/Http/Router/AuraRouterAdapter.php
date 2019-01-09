@@ -30,7 +30,12 @@ class AuraRouterAdapter implements RouterInterface {
     
     public function match(ServerRequestInterface $request): Result
     {
+        //В Аура нельзя напрямую из маршрутизатора получать методы match() и generate()
+        //В рамках одного роутера у Ауры несколько  специфических отдельных объектов
+        //Для парсинга и матчинга сначала из роутера получаем объект $matcher
         $matcher = $this->aura->getMatcher();
+        //А затем уже из внутреннего объекта $matcher обращаемся к match()
+        //Если маршрутизатор Аура вернул подходящее маршруту правило, то:
         if ($route = $matcher->match($request)) {
             return new Result($route->name, $route->handler, $route->attributes);
         }
@@ -39,8 +44,10 @@ class AuraRouterAdapter implements RouterInterface {
     
     public function generate($name, array $params): string
     {
+        //Получаем из маршрутизатора отдельный объект $generator
         $generator = $this->aura->getGenerator();
         try {
+            //А уже из объекта $generator получаем метод generate()
             return $generator->generate($name, $params);
         } catch (RouteNotFound $e) {
             throw new RouteNotFoundException($name, $params, $e);
