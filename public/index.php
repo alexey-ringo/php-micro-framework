@@ -27,6 +27,10 @@ $params = [
         'user' => 'userpass'
         ],
     ];
+
+//Создаем объект Посредник и передаем в его конструктор массив с пользователями и паролями
+$auth = new Middleware\BasicAuthMiddleware($params['users']);
+
 //Создаем объект маршрутизатора-контейнера Аура
 $aura = new Aura\Router\RouterContainer();
 //Извлекаем из него объект коллекции маршрутов (карта маршрутов)
@@ -41,17 +45,16 @@ $routes->get('home', '/', Action\HelloAction::class);
 
 $routes->get('about', '/about', Action\AboutAction::class);
 //Через анонимную функцию вызываем Посредник аутентификации
-$routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) use($params) {
-    //Создаем объект Посредник и передаем в его конструктор массив с пользователями и паролями
-    $auth = new Middleware\BasicAuthMiddleware($params['users']);
+$routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) use($auth) {
     //Создаем объект Action кабинета
     $cabinet = new Action\CabinetAction();
     //Запуск аутентификации (объекта Посредника)
-    //В метод (__invoke()) передаем реквест и анонинимную функцию, которая вернет Action кабинета, 
+    //В метод (__invoke()) передаем реквест и анонинимную функцию, которая запустит Action кабинета с параметром $request, 
     //если в Посреднике успешно прорйдет аутентификация
     return $auth($request, function(ServerRequestInterface $request) use($cabinet) {
         return $cabinet($request);
     });
+
 });
 
 $routes->get('blog', '/blog', Action\Blog\IndexAction::class);
