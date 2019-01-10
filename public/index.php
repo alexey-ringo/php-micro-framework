@@ -49,11 +49,9 @@ $routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) us
     //Создаем объект Action кабинета
     $cabinet = new Action\CabinetAction();
     //Запуск аутентификации (объекта Посредника)
-    //В метод (__invoke()) передаем реквест и анонинимную функцию, которая запустит Action кабинета с параметром $request, 
+    //В метод (__invoke()) посредника передаем реквест Action кабинета, 
     //если в Посреднике успешно прорйдет аутентификация
-    return $auth($request, function(ServerRequestInterface $request) use($cabinet) {
-        return $cabinet($request);
-    });
+    return $auth($request, $cabinet);
 
 });
 
