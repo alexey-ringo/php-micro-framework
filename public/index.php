@@ -5,9 +5,11 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 use App\Http\Action;
+use App\Http\Middleware;
 use Framework\Http\ActionResolver;
 use Framework\Http\Router\AuraRouterAdapter;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
+use Psr\Http\Message\ServerRequestInterface;
 //use Framework\Http\Router\RouteCollection;
 //use Framework\Http\Router\SimpleRouter;
 use Zend\Diactoros\Response\HtmlResponse;
@@ -38,11 +40,19 @@ $routes = $aura->getMap();
 $routes->get('home', '/', Action\HelloAction::class);
 
 $routes->get('about', '/about', Action\AboutAction::class);
-//Упаковываем конкретный Action в общий декоратор аутентификации
-$routes->get('cabinet', '/cabinet', new Action\BasicAuthActionDecorator(
-    new Action\CabinetAction(),
-    $params['users']
-    ));
+//Через анонимную функцию вызываем Посредник аутентификации
+$routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) use($params) {
+    //Создаем объект Посредник и передаем в его конструктор массив с пользователями и паролями
+    $auth = new Middleware\BasicAuthMiddleware($params['users']);
+    //Создаем объект Action кабинета
+    $cabinet = new Action\CabinetAction();
+    //Запуск аутентификации (объекта Посредника)
+    //В метод (__invoke()) передаем реквест и анонинимную функцию, которая вернет Action кабинета, 
+    //если в Посреднике успешно прорйдет аутентификация
+    return $auth($request, function(ServerRequestInterface $request) use($cabinet) {
+        return $cabinet($request);
+    });
+});
 
 $routes->get('blog', '/blog', Action\Blog\IndexAction::class);
 
