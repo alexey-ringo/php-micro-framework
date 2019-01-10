@@ -28,8 +28,10 @@ $params = [
         ],
     ];
 
-//Создаем объект Посредник и передаем в его конструктор массив с пользователями и паролями
+//Создаем объект Посредник-Auth и передаем в его конструктор массив с пользователями и паролями
 $auth = new Middleware\BasicAuthMiddleware($params['users']);
+//Создаем объект Посредник-Profiler
+$profiler = new Middleware\ProfilerMiddleware();
 
 //Создаем объект маршрутизатора-контейнера Аура
 $aura = new Aura\Router\RouterContainer();
@@ -45,14 +47,15 @@ $routes->get('home', '/', Action\HelloAction::class);
 
 $routes->get('about', '/about', Action\AboutAction::class);
 //Через анонимную функцию вызываем Посредник аутентификации
-$routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) use($auth) {
+$routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) use($auth, $profiler) {
     //Создаем объект Action кабинета
     $cabinet = new Action\CabinetAction();
-    //Запуск аутентификации (объекта Посредника)
-    //В метод (__invoke()) посредника передаем реквест Action кабинета, 
-    //если в Посреднике успешно прорйдет аутентификация
-    return $auth($request, $cabinet);
-
+    
+    //Последовательный запуск двух Посредников, Profiler и Auth, вложенных друг в друга
+    //Последний посредник вызывает непосредственно Action Cabinet
+    return $profiler($request, function(ServerRequestInterface $request) use($auth, $cabinet) {
+        return $auth($request, $cabinet);
+    });
 });
 
 $routes->get('blog', '/blog', Action\Blog\IndexAction::class);
