@@ -54,7 +54,9 @@ $routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) us
     //Последовательный запуск двух Посредников, Profiler и Auth, вложенных друг в друга
     //Последний посредник вызывает непосредственно Action Cabinet
     return $profiler($request, function(ServerRequestInterface $request) use($auth, $cabinet) {
-        return $auth($request, $cabinet);
+        return $auth($request, function(ServerRequestInterface $request) use($cabinet) {
+            return $cabinet($request);
+        });
     });
 });
 
