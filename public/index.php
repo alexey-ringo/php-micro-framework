@@ -39,7 +39,6 @@ $routes->get('home', '/', Action\HelloAction::class);
 $routes->get('about', '/about', Action\AboutAction::class);
 //Через анонимную функцию вызываем Посредник аутентификации
 $routes->get('cabinet', '/cabinet', [
-    Middleware\ProfilerMiddleware::class,
     new Middleware\BasicAuthMiddleware($params['users']),
     Action\CabinetAction::class,
 ]);
@@ -53,6 +52,10 @@ $router = new AuraRouterAdapter($aura);
 
 //Приводит разные типы обработчика (объект Closure или строка имени класса или еще что либо) к единому типу callable
 $resolver = new MiddlewareResolver();
+//Создаем Трубу глобально, для всех маршрутов
+$pipeline = new Pipeline();
+//И для всех маршрутов добавляем первый посредник - Profiler
+$pipeline->pipe($resolver->resolve(Middleware\ProfilerMiddleware::class));
 
 ### Running
 //Извлекаем $request из суперглобальных массивов $_GET и т.д.
@@ -68,20 +71,16 @@ try {
     }
     //Получаем массив всех записанных в маршрут обработчиков (Посредники и Action)
     $handlers = $result->getHandler();
-    $pipeline = new Pipeline();
-    
     //Либо проходим по массиву, либо преобразовываем в массив и все равно проходим по нему
     foreach (is_array($handlers) ? $handlers : [$handlers] as $handler) {
+        //Добавляя циклично в очередь Трубы все посредники и Action
         $pipeline->pipe($resolver->resolve($handler));
     }
-    //Передаем реквест (в итоге попадет в Action) и дефолтное иселючение
-    //Возвращает либо результат выполнения Action либо результат дефольного исключения
+} catch (RequestNotMatchedException $ex) {}
+
+    //Передаем в Трубу реквест (в итоге попадет в Action) и дефолтное иселючение
+    //Возвращает либо результат выполнения Action либо результат дефолтного исключения
     $response = $pipeline($request, new Middleware\NotFoundHandler());
-} catch (RequestNotMatchedException $ex) {
-    $handler = new Middleware\NotFoundHandler();
-    $response = $handler($request);
-    
-}
 
 ### Postprocessing
 $response = $response->withHeader('X-Developer', 'Alex_Ringo');
