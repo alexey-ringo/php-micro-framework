@@ -6,17 +6,17 @@
  * and open the template in the editor.
  */
 
-namespace Framework\Http;
+namespace Framework\Http\Pipeline;
 
 /**
  * Description of ActionResolver
  *
  * @author alexringo
  */
-class ActionResolver {
+class MiddlewareResolver {
     public function resolve($handler): callable
     {
-        //В зависимости от типа $handler либо создаем объект класса с обработчиком (если строка с именем клссса) либо сразу вызываем Closure
+        //В зависимости от типа $handler либо создаем объект класса с обработчиком (если строка с именем клссса) либо сразу вызываем Action (если Closure)
         return \is_string($handler) ? new $handler() : $handler;
     }
 }

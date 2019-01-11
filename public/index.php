@@ -6,13 +6,10 @@ error_reporting(E_ALL);
 
 use App\Http\Action;
 use App\Http\Middleware;
-use Framework\Http\ActionResolver;
+use Framework\Http\Pipeline\MiddlewareResolver;
 use Framework\Http\Pipeline\Pipeline;
 use Framework\Http\Router\AuraRouterAdapter;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
-use Psr\Http\Message\ServerRequestInterface;
-//use Framework\Http\Router\RouteCollection;
-//use Framework\Http\Router\SimpleRouter;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -41,19 +38,11 @@ $routes->get('home', '/', Action\HelloAction::class);
 
 $routes->get('about', '/about', Action\AboutAction::class);
 //Через анонимную функцию вызываем Посредник аутентификации
-$routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) use($params) {
-    $pipeline = new Pipeline();
-    //По очереди создали и добавили в трубу два Посредника
-    $pipeline->pipe(new Middleware\ProfilerMiddleware());
-    $pipeline->pipe(new Middleware\BasicAuthMiddleware($params['users']));
-    //Создаем объект Action кабинета и добавляем его в Трубу для финального исполнения
-    $pipeline->pipe(new Action\CabinetAction());
-    
-    //Труба возвращает либо финальный Action с последовательно обработынным Посредниками реквестом
-    //либо заглушку
-    return $pipeline($request, new Middleware\NotFoundHandler());
-    
-});
+$routes->get('cabinet', '/cabinet', [
+    Middleware\ProfilerMiddleware::class,
+    new Middleware\BasicAuthMiddleware($params['users']),
+    Action\CabinetAction::class,
+]);
 
 $routes->get('blog', '/blog', Action\Blog\IndexAction::class);
 
@@ -62,8 +51,8 @@ $routes->get('blog_show', '/blog/{id}', Action\Blog\ShowAction::class)->tokens([
 //
 $router = new AuraRouterAdapter($aura);
 
-//Определяет тип обработчика (объект Closure или строка имени класса или еще что либо) и по разному его обрабатывает
-$resolver = new ActionResolver();
+//Приводит разные типы обработчика (объект Closure или строка имени класса или еще что либо) к единому типу callable
+$resolver = new MiddlewareResolver();
 
 ### Running
 //Извлекаем $request из суперглобальных массивов $_GET и т.д.
@@ -77,15 +66,17 @@ try {
         //Проходим по всем аттрибутам и Примешиваем в реквест аттрибуты и их значения
         $request = $request->withAttribute($attribute, $value);
     }
+    //Получаем массив всех записанных в маршрут обработчиков (Посредники и Action)
+    $handlers = $result->getHandler();
+    $pipeline = new Pipeline();
     
-    //Получаем обработчик из результатов маршрутизации и передаем его в объект AcrionResolver
-    //ActionResolver на основании анализа типа обработчика создаст и вернет нужный обработчик маршрута
-    /** @var callable $action */
-    $action = $resolver->resolve($result->getHandler());
-    
-
-    //Запускаем анонимную функцию, передавая в нее реквест с примешанными аттрибутами
-    $response = $action($request);
+    //Либо проходим по массиву, либо преобразовываем в массив и все равно проходим по нему
+    foreach (is_array($handlers) ? $handlers : [$handlers] as $handler) {
+        $pipeline->pipe($resolver->resolve($handler));
+    }
+    //Передаем реквест (в итоге попадет в Action) и дефолтное иселючение
+    //Возвращает либо результат выполнения Action либо результат дефольного исключения
+    $response = $pipeline($request, new Middleware\NotFoundHandler());
 } catch (RequestNotMatchedException $ex) {
     $handler = new Middleware\NotFoundHandler();
     $response = $handler($request);

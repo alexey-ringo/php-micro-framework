@@ -18,7 +18,7 @@ class Next {
     
     //Итерация
     public function __invoke(ServerRequestInterface $request): ResponseInterface {
-       //Если очередь опустела - возвращаем итоговый Action
+       //Если очередь опустела - запускаем итоговый Action и возвращаем результат
         if($this->queue->isEmpty()) {
             return ($this->next)($request);
         }
