@@ -88,7 +88,7 @@ try {
     $response = $action($request);
 } catch (RequestNotMatchedException $ex) {
     $handler = new Middleware\NotFoundHandler();
-    $response = handler($request);
+    $response = $handler($request);
     
 }
 
