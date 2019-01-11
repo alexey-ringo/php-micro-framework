@@ -7,6 +7,7 @@ error_reporting(E_ALL);
 use App\Http\Action;
 use App\Http\Middleware;
 use Framework\Http\ActionResolver;
+use Framework\Http\Pipeline\Pipeline;
 use Framework\Http\Router\AuraRouterAdapter;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,11 +29,6 @@ $params = [
         ],
     ];
 
-//Создаем объект Посредник-Auth и передаем в его конструктор массив с пользователями и паролями
-$auth = new Middleware\BasicAuthMiddleware($params['users']);
-//Создаем объект Посредник-Profiler
-$profiler = new Middleware\ProfilerMiddleware();
-
 //Создаем объект маршрутизатора-контейнера Аура
 $aura = new Aura\Router\RouterContainer();
 //Извлекаем из него объект коллекции маршрутов (карта маршрутов)
@@ -47,17 +43,20 @@ $routes->get('home', '/', Action\HelloAction::class);
 
 $routes->get('about', '/about', Action\AboutAction::class);
 //Через анонимную функцию вызываем Посредник аутентификации
-$routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) use($auth, $profiler) {
-    //Создаем объект Action кабинета
-    $cabinet = new Action\CabinetAction();
+$routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) use($params) {
+    $pipeline = new Pipeline();
+    //По очереди создали и добавили в трубу два Посредника
+    $pipeline->pipe(new Middleware\ProfilerMiddleware());
+    $pipeline->pipe(new Middleware\BasicAuthMiddleware($params['users']));
+    //Создаем объект Action кабинета и добавляем его в Трубу для финального исполнения
+    $pipeline->pipe(new Action\CabinetAction());
     
-    //Последовательный запуск двух Посредников, Profiler и Auth, вложенных друг в друга
-    //Последний посредник вызывает непосредственно Action Cabinet
-    return $profiler($request, function(ServerRequestInterface $request) use($auth, $cabinet) {
-        return $auth($request, function(ServerRequestInterface $request) use($cabinet) {
-            return $cabinet($request);
-        });
+    //Труба возвращает либо финальный Action с последовательно обработынным Посредниками реквестом
+    //либо заглушку
+    return $pipeline($request, function() {
+        return new HtmlResponse('Undefined page', 404);
     });
+    
 });
 
 $routes->get('blog', '/blog', Action\Blog\IndexAction::class);

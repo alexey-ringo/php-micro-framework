@@ -7,11 +7,16 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class Pipeline {
     
-    private $middleware = [];
+    private $queue;
     
-    //Добавляет каждый переданный Посредник в массив
+    //Инициализация очереди только через конструктор (напрямую создавать объект очереди нельзя!)
+    public function __construct() {
+        $this->queue = new \SplQueue();
+    }
+    
+    //Добавляет каждый переданный Посредник в конец очереди
     public function pipe(callable $middleware): void {
-        $this->middleware[] = $middleware;
+        $this->queue->enqueue($middleware);
     }
     
     //Запускает рекурсивную ф-ю next() и передает в нее посленный в трубу запрос и финальный Action
@@ -24,12 +29,15 @@ class Pipeline {
     //пока в массиве $middleware не закончатся объекты.
     //После этого вызовется $default
     private function next(ServerRequestInterface $request, callable $default): ResponseInterface {
-        //Если закончились элементы в массиве $middleware
-        //Вызываем финальный Action в $default и передаем в него итоговый реквест (который может быть уже измененным в результате итераций)
-        if(!$current = array_shift($this->middleware)) {
+        //Если очередь пуста
+        //Возврящаем финальный Action в $default и передаем в него итоговый реквест (который может быть уже измененным в результате итераций)
+        if($this->queue->isEmpty()) {
             //И возвращаем нго как итор всей работы Трубы
             return $default($request);
         }
+        
+        //Извлекаем из очереди посредников первый элемент с начала очеред
+        $current = $this->queue->dequeue();
         
         return $current($request, function(ServerRequestInterface $request) use($default) {
             //Первоначально полученный $default сохраняем и передаем снова дальше на рекурсию для финального исполнения в конце всех итераций
