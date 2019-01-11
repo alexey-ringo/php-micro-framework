@@ -13,8 +13,6 @@ use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Psr\Http\Message\ServerRequestInterface;
 //use Framework\Http\Router\RouteCollection;
 //use Framework\Http\Router\SimpleRouter;
-use Zend\Diactoros\Response\HtmlResponse;
-//use Zend\Diactoros\Response\SapiEmitter;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -53,9 +51,7 @@ $routes->get('cabinet', '/cabinet', function(ServerRequestInterface $request) us
     
     //Труба возвращает либо финальный Action с последовательно обработынным Посредниками реквестом
     //либо заглушку
-    return $pipeline($request, function() {
-        return new HtmlResponse('Undefined page', 404);
-    });
+    return $pipeline($request, new Middleware\NotFoundHandler());
     
 });
 
@@ -91,7 +87,9 @@ try {
     //Запускаем анонимную функцию, передавая в нее реквест с примешанными аттрибутами
     $response = $action($request);
 } catch (RequestNotMatchedException $ex) {
-    $response = new HtmlResponse('Undefined page', 404);
+    $handler = new Middleware\NotFoundHandler();
+    $response = handler($request);
+    
 }
 
 ### Postprocessing
