@@ -8,6 +8,8 @@
 
 namespace Framework\Http\Pipeline;
 
+use Psr\Http\Message\ServerRequestInterface;
+
 /**
  * Description of ActionResolver
  *
@@ -16,7 +18,19 @@ namespace Framework\Http\Pipeline;
 class MiddlewareResolver {
     public function resolve($handler): callable
     {
-        //В зависимости от типа $handler либо создаем объект класса с обработчиком (если строка с именем клссса) либо сразу вызываем Action (если Closure)
-        return \is_string($handler) ? new $handler() : $handler;
+        //В зависимости от типа $handler: 
+        //Если $handler - сторока
+        //то вместо того, чтобы сразу здесь создавать объект обработчика - 
+        //возвращаем в Трубу анонимную функцию с интерфейсом, соответствующим Трубе ($request, $next), 
+        //которая запустится уже в Трубе, и сама там создаст объект.
+        if (\is_string($handler)) {
+            return function (ServerRequestInterface $request, callable $next) use ($handler) {
+                $object = new $handler();
+                //Если это будет Action, то параметр $next будет проигнорирован
+                return $object($request, $next);
+            };
+        }
+        //Если $handler - уже был созданный объект - то возращаем его в Трубу без изменений
+        return $handler;
     }
 }

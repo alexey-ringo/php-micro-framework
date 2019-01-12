@@ -24,7 +24,7 @@ class Next {
         }
         //Извлечение из очереди
         $middleware = $this->queue->dequeue();
-        //Возврат на очередную итерацию
+        //Вызов и возврат результата на очередную итерацию
         return $middleware($request, function(ServerRequestInterface $request) {
             return $this($request);
         });

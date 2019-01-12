@@ -54,7 +54,7 @@ $router = new AuraRouterAdapter($aura);
 $resolver = new MiddlewareResolver();
 //Создаем Трубу глобально, для всех маршрутов
 $pipeline = new Pipeline();
-//И для всех маршрутов добавляем первый посредник - Profiler
+//И для всех маршрутов добавляем общий первый посредник - Profiler
 $pipeline->pipe($resolver->resolve(Middleware\ProfilerMiddleware::class));
 
 ### Running
@@ -78,9 +78,9 @@ try {
     }
 } catch (RequestNotMatchedException $ex) {}
 
-    //Передаем в Трубу реквест (в итоге попадет в Action) и дефолтное иселючение
-    //Возвращает либо результат выполнения Action либо результат дефолтного исключения
-    $response = $pipeline($request, new Middleware\NotFoundHandler());
+//Передаем в Трубу реквест (в итоге попадет в Action) и дефолтное иселючение
+//Возвращает либо результат выполнения Action либо результат дефолтного исключения
+$response = $pipeline($request, new Middleware\NotFoundHandler());
 
 ### Postprocessing
 $response = $response->withHeader('X-Developer', 'Alex_Ringo');

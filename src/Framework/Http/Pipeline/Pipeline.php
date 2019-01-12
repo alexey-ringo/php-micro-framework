@@ -18,7 +18,6 @@ class Pipeline {
     }
     
     public function __invoke(ServerRequestInterface $request, callable $next): ResponseInterface {
-        
         $delegate = new Next(clone $this->queue, $next);
         //передача в Next на итерации
         return $delegate($request);
