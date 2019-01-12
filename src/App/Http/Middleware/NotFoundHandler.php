@@ -7,6 +7,6 @@ use Zend\Diactoros\Response\HtmlResponse;
 
 class NotFoundHandler {
     public function __invoke(ServerRequestInterface $request) {
-        return new HtmlResponse('Undefined Page', 404);
+        return new HtmlResponse('Undefinite Page', 404);
     }
 }

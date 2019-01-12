@@ -19,10 +19,10 @@ use Zend\Diactoros\Response\JsonResponse;
  */
 class ShowAction {
     
-    public function __invoke(ServerRequestInterface $request) {
+    public function __invoke(ServerRequestInterface $request, callable $notFound) {
         $id = $request->getAttribute('id');
         if ($id > 2) {
-            return new HtmlResponse('Undefined page', 404);
+            return $notFound($request);
         }
         return new JsonResponse(['id' => $id, 'title' => 'Post #' . $id]);
     }
