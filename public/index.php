@@ -69,13 +69,22 @@ try {
         //Проходим по всем аттрибутам и Примешиваем в реквест аттрибуты и их значения
         $request = $request->withAttribute($attribute, $value);
     }
-    //Получаем массив всех записанных в маршрут обработчиков (Посредники и Action)
-    $handlers = $result->getHandler();
-    //Либо проходим по массиву, либо преобразовываем в массив и все равно проходим по нему
-    foreach (is_array($handlers) ? $handlers : [$handlers] as $handler) {
-        //Добавляя циклично в очередь Трубы все посредники и Action
-        $pipeline->pipe($resolver->resolve($handler));
+    //Получаем обработчики маршрута
+    $handler = $result->getHandler();
+    //Если это массив всех записанных в маршрут обработчиков (Посредники и Action)
+    if(is_array($handler)) {
+        //Новая внутренняя Труба и в цикле добавляем туда все обработчики
+        $middleware = new Pipeline();
+        foreach($handler as $item) {
+            $middleware->pipe($resolver->resolve($item));
+        }
+    } else {
+        //Если не массив (т.е. один Action)
+        $middleware = $resolver->resolve($handler);
     }
+    //Добавляем во внешнюю Трубу
+    $pipeline->pipe($middleware);
+
 } catch (RequestNotMatchedException $ex) {}
 
 //Передаем в Трубу реквест (в итоге попадет в Action) и дефолтное иселючение
