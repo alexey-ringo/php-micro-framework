@@ -13,9 +13,9 @@ use Framework\Http\Router\AuraRouterAdapter;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
-use Psr\Http\Message\ServerRequestInterface;
-use Zend\Diactoros\Response\HtmlResponse;
-use Zend\Diactoros\Response\JsonResponse;
+//use Psr\Http\Message\ServerRequestInterface;
+//use Zend\Diactoros\Response\HtmlResponse;
+//use Zend\Diactoros\Response\JsonResponse;
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
@@ -59,26 +59,13 @@ $resolver = new MiddlewareResolver();
 //Создаем Трубу глобально, для всех маршрутов, и инициализируем ее резолвером и дефолтной заглушкой
 $app = new Application($resolver, new Middleware\NotFoundHandler());
 
-$app->pipe(function(ServerRequestInterface $request, callable $next) use($params) {
-    try {
-            return $next($request);
-        } catch (\Throwable $e) {
-            if ($params['debug']) {
-                return new JsonResponse([
-                    'error' => 'Server error',
-                    'code' => $e->getCode(),
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTrace(),
-                ], 500);
-            }
-            return new HtmlResponse('Server error', 500);
-        }
-});
-//для всех маршрутов добавляем общий первый посредник - credentials (строкой с именем класса)
+//для всех маршрутов добавляем общий первый посредник для дебага
+$app->pipe(new Middleware\ErrorHandlerMiddleware($params['debug']));
+//для всех маршрутов добавляем общий второй посредник - credentials (строкой с именем класса)
 //Предварительно резолвить уже не обязательно (выполняется в $app)
 $app->pipe(Middleware\CredentialsMiddleware::class);
 
-//для всех маршрутов добавляем общий второй посредник - Profiler в виде строки класса
+//для всех маршрутов добавляем общий третий посредник - Profiler в виде строки класса
 $app->pipe(Middleware\ProfilerMiddleware::class);
 
 ### Running
