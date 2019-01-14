@@ -53,8 +53,8 @@ $router = new AuraRouterAdapter($aura);
 
 //Приводит разные типы обработчика (объект Closure или строка имени класса или еще что либо) к единому типу callable
 $resolver = new MiddlewareResolver();
-//Создаем Трубу глобально, для всех маршрутов, и инициализируем ее резолвером
-$app = new Application($resolver);
+//Создаем Трубу глобально, для всех маршрутов, и инициализируем ее резолвером и дефолтной заглушкой
+$app = new Application($resolver, new Middleware\NotFoundHandler());
 //И для всех маршрутов добавляем общий первый посредник - Profiler в виде строки класса
 //Предварительно резолвить уже не обязательно (выполняется в $app)
 $app->pipe(Middleware\ProfilerMiddleware::class);
@@ -83,9 +83,9 @@ try {
 
 } catch (RequestNotMatchedException $ex) {}
 
-//Передаем в Трубу реквест (в итоге попадет в Action) и дефолтное иселючение
-//Возвращает либо результат выполнения Action либо результат дефолтного исключения
-$response = $app($request, new Middleware\NotFoundHandler());
+//Передаем в Трубу реквест (в итоге попадет в Action)
+//Возвращает либо результат выполнения Action либо результат дефолтной заглушки
+$response = $app->run($request);
 
 ### Postprocessing
 $response = $response->withHeader('X-Developer', 'Alex_Ringo');
