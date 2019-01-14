@@ -56,17 +56,11 @@ $resolver = new MiddlewareResolver();
 //Создаем Трубу глобально, для всех маршрутов, и инициализируем ее резолвером и дефолтной заглушкой
 $app = new Application($resolver, new Middleware\NotFoundHandler());
 
-//для всех маршрутов добавляем общий первый посредник - credentials
+//для всех маршрутов добавляем общий первый посредник - credentials (строкой с именем класса)
 //Предварительно резолвить уже не обязательно (выполняется в $app)
-$app->pipe(function (ServerRequestInterface $request, callable $next) {
-    /**  @var Psr\Http\Message\ResponseInterface $response */
-    $response = $next($request);
-    //Запускаем $next на дальнейшее исполнение цепочки обработчиков, а в response добавляем заголовки
-    return $response->withHeader('X-Developer', 'Alex_Ringo');
-});
+$app->pipe(Middleware\CredentialsMiddleware::class);
 
 //для всех маршрутов добавляем общий второй посредник - Profiler в виде строки класса
-//Предварительно резолвить уже не обязательно (выполняется в $app)
 $app->pipe(Middleware\ProfilerMiddleware::class);
 
 ### Running
