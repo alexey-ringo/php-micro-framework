@@ -8,14 +8,10 @@ use App\Http\Action;
 use App\Http\Middleware;
 use Framework\Http\Application;
 use Framework\Http\Pipeline\MiddlewareResolver;
-use Framework\Http\Pipeline\Pipeline;
 use Framework\Http\Router\AuraRouterAdapter;
-use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
-//use Psr\Http\Message\ServerRequestInterface;
-//use Zend\Diactoros\Response\HtmlResponse;
-//use Zend\Diactoros\Response\JsonResponse;
+
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
@@ -68,32 +64,15 @@ $app->pipe(Middleware\CredentialsMiddleware::class);
 //для всех маршрутов добавляем общий третий посредник - Profiler в виде строки класса
 $app->pipe(Middleware\ProfilerMiddleware::class);
 
+$app->pipe(new Framework\Http\Middleware\RouteMiddleware($router, $resolver));
+
 ### Running
 //Извлекаем $request из суперглобальных массивов $_GET и т.д.
 $request = ServerRequestFactory::fromGlobals();
-try {
-    //И передаем его в роутер на сматчивание с соответствующим ему маршрутом (парсим текущий маршрут)
-    $result = $router->match($request);        
-    //Если все успешно, то роутер вернет название маршрута, его обработчик и аттрибуты
-    
-    foreach ($result->getAttributes() as $attribute => $value) {
-        //Проходим по всем аттрибутам и Примешиваем в реквест аттрибуты и их значения
-        $request = $request->withAttribute($attribute, $value);
-    }
-    
-    //Весь массив обработчиков в маршруте записываем в глобальную Трубу в виде внутренней вложенной Трубы
-    //Резолвинг массива обработчиков произойдет в Application, 
-    //создание внутренней Трубы и добавление обработчиков в нее - в MiddlewareResolwer
-    //там же будет и вложение внутренней Трубы в глобальную
-    
-    //Сейчас обработчики маршрута передаем сразу как есть, без предварительного резолвинга
-    $app->pipe($result->getHandler());
-    
 
-} catch (RequestNotMatchedException $ex) {}
-
-//Передаем в Трубу реквест (в итоге попадет в Action)
-//Возвращает либо результат выполнения Action либо результат дефолтной заглушки
+//Запуск всей цепочки Посредников (в т.ч. и вложенных)
+//Передаем в глобальную Трубу изначальный входящий реквест (в итоге попадет в конечный  Action)
+//Возвращает либо результат выполнения конечного Action либо результат дефолтной заглушки
 $response = $app->run($request);
 
 ### Postprocessing
