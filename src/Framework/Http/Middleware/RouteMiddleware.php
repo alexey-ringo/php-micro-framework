@@ -2,19 +2,17 @@
 
 namespace Framework\Http\Middleware;
 
-use Framework\Http\Pipeline\MiddlewareResolver;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Framework\Http\Router\RouterInterface;
+use Framework\Http\Router\Result;
 use Psr\Http\Message\ServerRequestInterface;
 
 class RouteMiddleware {
     
     private $router;
-    private $resolver;
     
-    public function __construct(RouterInterface $router, MiddlewareResolver $resolver) {
+    public function __construct(RouterInterface $router) {
         $this->router = $router;
-        $this->resolver = $resolver;
     }
     
     public function __invoke(ServerRequestInterface $request, callable $next) {
@@ -27,10 +25,9 @@ class RouteMiddleware {
             foreach ($result->getAttributes() as $attribute => $value) {
                 $request = $request->withAttribute($attribute, $value);
             }
-            //Резолвит весь массив обработчиков маршрута (с уже подмешанными аттрибутами)
-            $middleware = $this->resolver->resolve($result->getHandler());
-            //Возврящает обработчик либо на финальное исполнение либо дальше в цепочку
-            return $middleware($request, $next);
+            //Передаем в последний Посредник финальный обработчик маршрута (Action) 
+            //и реквест с подмешанным атрибутом $result. Газвание аттрибута - строка с именем класса Result 
+            return $next($request->withAttribute(Result::class, $result));
             
         }   catch(RequestNotMatchedException $ex) {
                 return $next($request);

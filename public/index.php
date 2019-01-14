@@ -64,7 +64,11 @@ $app->pipe(Middleware\CredentialsMiddleware::class);
 //для всех маршрутов добавляем общий третий посредник - Profiler в виде строки класса
 $app->pipe(Middleware\ProfilerMiddleware::class);
 
-$app->pipe(new Framework\Http\Middleware\RouteMiddleware($router, $resolver));
+//Разделение последнего посредника на 2 части:
+//RouteMiddleware - определяет маршрут
+$app->pipe(new Framework\Http\Middleware\RouteMiddleware($router));
+//DispatchMiddleware - запускает итоговый обработчик маршрута на исполнение
+$app->pipe(new Framework\Http\Middleware\DispatchMiddleware($resolver));
 
 ### Running
 //Извлекаем $request из суперглобальных массивов $_GET и т.д.
