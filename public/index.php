@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 use App\Http\Action;
 use App\Http\Middleware;
+use Framework\Http\Application;
 use Framework\Http\Pipeline\MiddlewareResolver;
 use Framework\Http\Pipeline\Pipeline;
 use Framework\Http\Router\AuraRouterAdapter;
@@ -52,10 +53,11 @@ $router = new AuraRouterAdapter($aura);
 
 //Приводит разные типы обработчика (объект Closure или строка имени класса или еще что либо) к единому типу callable
 $resolver = new MiddlewareResolver();
-//Создаем Трубу глобально, для всех маршрутов
-$pipeline = new Pipeline();
-//И для всех маршрутов добавляем общий первый посредник - Profiler
-$pipeline->pipe($resolver->resolve(Middleware\ProfilerMiddleware::class));
+//Создаем Трубу глобально, для всех маршрутов, и инициализируем ее резолвером
+$app = new Application($resolver);
+//И для всех маршрутов добавляем общий первый посредник - Profiler в виде строки класса
+//Предварительно резолвить уже не обязательно (выполняется в $app)
+$app->pipe(Middleware\ProfilerMiddleware::class);
 
 ### Running
 //Извлекаем $request из суперглобальных массивов $_GET и т.д.
@@ -70,16 +72,20 @@ try {
         $request = $request->withAttribute($attribute, $value);
     }
     
-    //Получаем обработчики маршрута
-    $handler = $result->getHandler();
-    //Добавляем во внешнюю Трубу внутреннюю Трубу (резолвим обработчики и соответствующим образом в резолвере записываем их в зависимости от их типа)
-    $pipeline->pipe($resolver->resolve($handler));
+    //Весь массив обработчиков в маршруте записываем в глобальную Трубу в виде внутренней вложенной Трубы
+    //Резолвинг массива обработчиков произойдет в Application, 
+    //создание внутренней Трубы и добавление обработчиков в нее - в MiddlewareResolwer
+    //там же будет и вложение внутренней Трубы в глобальную
+    
+    //Сейчас обработчики маршрута передаем сразу как есть, без предварительного резолвинга
+    $app->pipe($result->getHandler());
+    
 
 } catch (RequestNotMatchedException $ex) {}
 
 //Передаем в Трубу реквест (в итоге попадет в Action) и дефолтное иселючение
 //Возвращает либо результат выполнения Action либо результат дефолтного исключения
-$response = $pipeline($request, new Middleware\NotFoundHandler());
+$response = $app($request, new Middleware\NotFoundHandler());
 
 ### Postprocessing
 $response = $response->withHeader('X-Developer', 'Alex_Ringo');
