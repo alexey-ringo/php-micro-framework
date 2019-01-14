@@ -13,7 +13,7 @@ use Framework\Http\Router\AuraRouterAdapter;
 use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
-
+use Psr\Http\Message\ServerRequestInterface;
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
@@ -55,7 +55,17 @@ $router = new AuraRouterAdapter($aura);
 $resolver = new MiddlewareResolver();
 //Создаем Трубу глобально, для всех маршрутов, и инициализируем ее резолвером и дефолтной заглушкой
 $app = new Application($resolver, new Middleware\NotFoundHandler());
-//И для всех маршрутов добавляем общий первый посредник - Profiler в виде строки класса
+
+//для всех маршрутов добавляем общий первый посредник - credentials
+//Предварительно резолвить уже не обязательно (выполняется в $app)
+$app->pipe(function (ServerRequestInterface $request, callable $next) {
+    /**  @var Psr\Http\Message\ResponseInterface $response */
+    $response = $next($request);
+    //Запускаем $next на дальнейшее исполнение цепочки обработчиков, а в response добавляем заголовки
+    return $response->withHeader('X-Developer', 'Alex_Ringo');
+});
+
+//для всех маршрутов добавляем общий второй посредник - Profiler в виде строки класса
 //Предварительно резолвить уже не обязательно (выполняется в $app)
 $app->pipe(Middleware\ProfilerMiddleware::class);
 
@@ -88,7 +98,7 @@ try {
 $response = $app->run($request);
 
 ### Postprocessing
-$response = $response->withHeader('X-Developer', 'Alex_Ringo');
+//Данные в хеадер ('X-Developer', 'Alex_Ringo') уже добавлены на уровне обработки в Посреднике
 
 ### Sending
 $emitter = new SapiEmitter();
