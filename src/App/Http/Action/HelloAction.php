@@ -16,8 +16,10 @@ use Zend\Diactoros\Response\HtmlResponse;
  *
  * @author alexringo
  */
-class HelloAction {
-    public function __invoke(ServerRequestInterface $request) {
+class HelloAction
+{
+    public function __invoke(ServerRequestInterface $request) 
+    {
         $name = $request->getQueryParams()['name'] ?? 'Guest';
         return new HtmlResponse('Hello, ' . $name . '!');
     }

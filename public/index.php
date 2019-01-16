@@ -9,6 +9,7 @@ use App\Http\Middleware;
 use Framework\Http\Application;
 use Framework\Http\Pipeline\MiddlewareResolver;
 use Framework\Http\Router\AuraRouterAdapter;
+use Zend\Diactoros\Response;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -77,7 +78,8 @@ $request = ServerRequestFactory::fromGlobals();
 //Запуск всей цепочки Посредников (в т.ч. и вложенных)
 //Передаем в глобальную Трубу изначальный входящий реквест (в итоге попадет в конечный  Action)
 //Возвращает либо результат выполнения конечного Action либо результат дефолтной заглушки
-$response = $app->run($request);
+//Передали объект (прототип) Response (созданный с помощью Zend)
+$response = $app->run($request, new Response());
 
 ### Postprocessing
 //Данные в хеадер ('X-Developer', 'Alex_Ringo') уже добавлены на уровне обработки в Посреднике

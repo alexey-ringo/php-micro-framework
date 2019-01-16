@@ -17,16 +17,16 @@ class Next {
     }
     
     //Итерация
-    public function __invoke(ServerRequestInterface $request): ResponseInterface {
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
        //Если очередь опустела - запускаем итоговый Action и возвращаем результат
         if($this->queue->isEmpty()) {
-            return ($this->next)($request);
+            return ($this->next)($request, $response);
         }
         //Извлечение из очереди
         $middleware = $this->queue->dequeue();
         //Вызов и возврат результата на очередную итерацию
-        return $middleware($request, function(ServerRequestInterface $request) {
-            return $this($request);
+        return $middleware($request, $response, function(ServerRequestInterface $request) use($response) {
+            return $this($request, $response);
         });
     }
 }

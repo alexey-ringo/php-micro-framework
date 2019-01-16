@@ -6,7 +6,8 @@ use Psr\Http\Message\ResponseInterface;
 
 class ProfilerMiddleware {
     
-    public function __invoke(ServerRequestInterface $request, callable $next) {
+    public function __invoke(ServerRequestInterface $request, callable $next)
+    {
         //Время старта выполнения Посредника Profiler
         $start = microtime(true);
         

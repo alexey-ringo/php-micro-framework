@@ -27,7 +27,8 @@ class Application extends Pipeline {
     }
     
     //Вызывает объект Application-потомок Pipeline, как функцию (Pipeline::__invoke()) и передает 
-    public function run(ServerRequestInterface $request): ResponseInterface {
-        return $this($request, $this->default);
+    public function run(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface 
+    {
+        return $this($request, $response, $this->default);
     }
 }

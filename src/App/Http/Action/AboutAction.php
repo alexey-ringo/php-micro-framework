@@ -8,6 +8,8 @@
 
 namespace App\Http\Action;
 
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Zend\Diactoros\Response\HtmlResponse;
 
 /**
@@ -15,8 +17,9 @@ use Zend\Diactoros\Response\HtmlResponse;
  *
  * @author alexringo
  */
-class AboutAction {
-    public function __invoke() {
+class AboutAction{
+    public function __invoke(ServerRequestInterface $request)
+    {
         return new HtmlResponse('I am a simple site');
     }
 }

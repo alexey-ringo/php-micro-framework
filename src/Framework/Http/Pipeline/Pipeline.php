@@ -17,10 +17,10 @@ class Pipeline {
         $this->queue->enqueue($middleware);
     }
     
-    public function __invoke(ServerRequestInterface $request, callable $next): ResponseInterface {
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next): ResponseInterface {
         $delegate = new Next(clone $this->queue, $next);
         //передача в Next на итерации
-        return $delegate($request);
+        return $delegate($request, $response);
     }
     
 }
