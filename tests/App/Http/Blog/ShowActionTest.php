@@ -28,7 +28,9 @@ class ShowActionTest extends TestCase {
         $action = new ShowAction();
         $request = (new ServerRequest())
             ->withAttribute('id', $id = 2);
-        $response = $action($request, new NotFoundHandler());
+        $response = $action($request, function() { 
+            return new NotFoundHandler();
+            });
         self::assertEquals(200, $response->getStatusCode());
         self::assertJsonStringEqualsJsonString(
             json_encode(['id' => $id, 'title' => 'Post #' . $id]),
@@ -41,9 +43,12 @@ class ShowActionTest extends TestCase {
         $action = new ShowAction();
         $request = (new ServerRequest())
             ->withAttribute('id', $id = 10);
-        $response = $action($request, new NotFoundHandler());
-        self::assertEquals(404, $response->getStatusCode());
-        self::assertEquals('Undefinite Page', $response->getBody()->getContents());
+        $response = $action($request, function () {
+            return new HtmlResponse('Error, Not Found Handler', 484);
+        });
+            
+        self::assertEquals(484, $response->getStatusCode());
+        self::assertEquals('Error, Not Found Handler', $response->getBody()->getContents());
     }
     
 }

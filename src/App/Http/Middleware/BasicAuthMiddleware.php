@@ -24,7 +24,7 @@ class BasicAuthMiddleware
                 if($username === $name && $password === $pass) {
                     //Вызываем Action, в данном примере - CabinetAction
                     //Передаем в него реквест с упаковкой имени пользователя, прошедшего в конструктор, в доп аттрибут запроса
-                    return $next($request->withAttribute(self::ATTRIBUTE, $name));
+                    return $next($request->withAttribute(self::ATTRIBUTE, $name), $response);
                 }
             }
         }

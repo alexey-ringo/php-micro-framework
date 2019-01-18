@@ -52,7 +52,7 @@ $routes->get('blog_show', '/blog/{id}', Action\Blog\ShowAction::class)->tokens([
 $router = new AuraRouterAdapter($aura);
 
 //Приводит разные типы обработчика (объект Closure или строка имени класса или еще что либо) к единому типу callable
-$resolver = new MiddlewareResolver();
+$resolver = new MiddlewareResolver(new Response());
 //Создаем Трубу глобально, для всех маршрутов, и инициализируем ее резолвером и дефолтной заглушкой
 $app = new Application($resolver, new Middleware\NotFoundHandler());
 
@@ -79,7 +79,7 @@ $request = ServerRequestFactory::fromGlobals();
 //Передаем в глобальную Трубу изначальный входящий реквест (в итоге попадет в конечный  Action)
 //Возвращает либо результат выполнения конечного Action либо результат дефолтной заглушки
 //Передали объект (прототип) Response (созданный с помощью Zend)
-$response = $app->run($request, new Response());
+$response = $app->handle($request);
 
 ### Postprocessing
 //Данные в хеадер ('X-Developer', 'Alex_Ringo') уже добавлены на уровне обработки в Посреднике

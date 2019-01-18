@@ -8,9 +8,14 @@
 
 namespace Framework\Http\Pipeline;
 
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
+use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
+use Zend\Stratigility\Middleware\RequestHandlerMiddleware;
+use Zend\Stratigility\MiddlewarePipe;
 
 /**
  * Description of ActionResolver
@@ -18,7 +23,16 @@ use Psr\Http\Message\ServerRequestInterface;
  * @author alexringo
  */
 class MiddlewareResolver {
-    public function resolve($handler): callable
+    
+    private $responsePrototype;
+    
+    public function __construct(ResponseInterface $responsePrototype)
+    {
+        $this->responsePrototype = $responsePrototype;
+    }
+    
+    
+    public function resolve($handler): MiddlewareInterface
     {
         //В зависимости от типа $handler:
         
@@ -31,20 +45,21 @@ class MiddlewareResolver {
         //Возвращаем анонимную функцию с 3-мя аргументами и в ней уже создаем объект Обработчика
         //затем повторно резолвим но уже как объект - с анализом тиав объекта ниже
         if (\is_string($handler)) {
-            return function (ServerRequestInterface $request, ResponseInterface $response, callable $next) use ($handler) {
+            return new CallableMiddlewareDecorator(function (ServerRequestInterface $request, RequestHandlerInterface $next) use ($handler) {
                 $middleware = $this->resolve(new $handler());
-                return $middleware($request, $response, $next);
-            };
+                return $middleware->process($request, $next);
+            });
         }
         
         //Если $handler - уже созданный объект (может прийти на вход резолвера извне,
         //а может вернуться в анонимной функции из проверки is_string
         //то возращаем его в Трубу без изменений
          if ($handler instanceof MiddlewareInterface) {
-            return function (ServerRequestInterface $request, ResponseInterface $response, callable $next) use ($handler) {
-                //PsrHandlerWrapper - объект-прототип, реализующий PsrMiddlewareInterface
-                return $handler->process($request, new PsrHandlerWrapper($next));
-            };
+            return $handler;
+        }
+        
+        if ($handler instanceof RequestHandlerInterface) {
+            return new RequestHandlerMiddleware($handler);
         }
         
         if (\is_object($handler)) {
@@ -53,11 +68,9 @@ class MiddlewareResolver {
                 $method = $reflection->getMethod('__invoke');
                 $parameters = $method->getParameters();
                 if (\count($parameters) === 2 && $parameters[1]->isCallable()) {
-                    return function (ServerRequestInterface $request, ResponseInterface $response, callable $next) use ($handler) {
-                        return $handler($request, $next);
-                    };
+                    return new SinglePassMiddlewareDecorator($handler);
                 }
-                return $handler;
+                return new DoublePassMiddlewareDecorator($handler, $this->responsePrototype);
             }
         }
         
@@ -65,10 +78,10 @@ class MiddlewareResolver {
     }
     
     //Если $handler - массив (объектов - обработчиков/Посредников)
-    private function createPipe(array $handlers): Pipeline
+    private function createPipe(array $handlers): MiddlewarePipe
     {
         //Новая внутренняя Труба и в цикле добавляем туда все обработчики из массива
-        $pipeline = new Pipeline();
+        $pipeline = new MiddlewarePipe();
         foreach($handlers as $handler) {
             $pipeline->pipe($this->resolve($handler));
         }
