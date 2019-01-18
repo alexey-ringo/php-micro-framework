@@ -19,7 +19,7 @@ class DispatchMiddleware implements MiddlewareInterface
     }
     
     //$request - от предпоследнего посредника RouteMiddleware
-    //$next - заглушка по умолчанию
+    //$handler - переданная в Application заглушка по умолчанию
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface 
     {
         /** @var Result $result */
@@ -28,9 +28,9 @@ class DispatchMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
         
-        //Резолвим весь массив обработчиков маршрута (с уже подмешанными аттрибутами)
+        //Резолвим всю собранную очередь обработчиков маршрута в Pipeline
         $middleware = $this->resolver->resolve($result->getHandler());
-        //Возвращает набор обработчиков в Трубе на финальное исполнение
+        //Возвращает результат выполнения всей цепочки собранных в Pipeline обработчиков в конечный Action
         return $middleware->process($request, $handler);
     }
 }

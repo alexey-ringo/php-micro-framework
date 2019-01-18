@@ -31,11 +31,13 @@ class Application implements MiddlewareInterface, RequestHandlerInterface {
         }
     }
     
+    //Передача результата выполнения всей цепочки Посредников в предфинальный DispathMiddleware
     public function handle(ServerRequestInterface $request): ResponseInterface 
     {
         return $this->pipeline->process($request, $this->default);
     }
     
+    //Для последовательной обработки Middleware
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         return $this->pipeline->process($request, $handler);

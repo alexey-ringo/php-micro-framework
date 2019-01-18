@@ -34,16 +34,10 @@ class MiddlewareResolver {
     
     public function resolve($handler): MiddlewareInterface
     {
-        //В зависимости от типа $handler:
-        
-        //Если $handler - массив (объектов - обработчиков/Посредников)
         if (\is_array($handler)) {
             return $this->createPipe($handler);
         }
         
-        //Если $handler - сторока
-        //Возвращаем анонимную функцию с 3-мя аргументами и в ней уже создаем объект Обработчика
-        //затем повторно резолвим но уже как объект - с анализом тиав объекта ниже
         if (\is_string($handler)) {
             return new CallableMiddlewareDecorator(function (ServerRequestInterface $request, RequestHandlerInterface $next) use ($handler) {
                 $middleware = $this->resolve(new $handler());
@@ -51,10 +45,7 @@ class MiddlewareResolver {
             });
         }
         
-        //Если $handler - уже созданный объект (может прийти на вход резолвера извне,
-        //а может вернуться в анонимной функции из проверки is_string
-        //то возращаем его в Трубу без изменений
-         if ($handler instanceof MiddlewareInterface) {
+        if ($handler instanceof MiddlewareInterface) {
             return $handler;
         }
         
@@ -77,10 +68,9 @@ class MiddlewareResolver {
         throw new UnknownMiddlewareTypeException($handler);
     }
     
-    //Если $handler - массив (объектов - обработчиков/Посредников)
+    
     private function createPipe(array $handlers): MiddlewarePipe
     {
-        //Новая внутренняя Труба и в цикле добавляем туда все обработчики из массива
         $pipeline = new MiddlewarePipe();
         foreach($handlers as $handler) {
             $pipeline->pipe($this->resolve($handler));
