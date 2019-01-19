@@ -29,7 +29,7 @@ class ContainerTest extends TestCase
         self::assertNotNull($value = $container->get($name));
         self::assertInstanceOf(\stdClass::class, $value);
     }
-    
+    //Тест на кэширование объектов в контейнере
     public function testSingleton()
     {
         $container = new Container();
