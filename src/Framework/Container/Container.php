@@ -21,7 +21,8 @@ class Container {
         //При первом обращении к параметру/объекту - записываем его в массив $results
         $definition = $this->definitions[$id];
         if($definition instanceof \Closure) {
-            $this->results[$id] = $definition();
+            //Необходимо уепзпть в определении анонимной функции возможность принимать обхект самого себя как параметр
+            $this->results[$id] = $definition($this);
         } else {
             $this->results[$id] = $definition;
         }

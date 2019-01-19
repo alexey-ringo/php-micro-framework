@@ -29,6 +29,21 @@ class ContainerTest extends TestCase
         self::assertNotNull($value = $container->get($name));
         self::assertInstanceOf(\stdClass::class, $value);
     }
+    
+    //Проверка того, что Контейнер передает объект самого себя в анонимную функцию
+    public function testContainerPass()
+    {
+        $container = new Container();
+        $container->set('param', $value = 15);
+        $container->set($name = 'name', function (Container $container) {
+            $object = new \stdClass();
+            $object->param = $container->get('param');
+            return $object;
+        });
+        self::assertObjectHasAttribute('param', $object = $container->get($name));
+        self::assertEquals($value, $object->param);
+    }
+    
     //Тест на кэширование объектов в контейнере
     public function testSingleton()
     {
