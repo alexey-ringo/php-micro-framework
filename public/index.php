@@ -47,8 +47,6 @@ $container->set(RouterInterface::class, function(Container $container) {
     return new AuraRouterAdapter($aura);
 });
 
-$router = $container->get(RouterInterface::class);
-
 $resolver = new MiddlewareResolver(new Response());
 
 $app = new Application($resolver, new Middleware\NotFoundHandler());
@@ -57,7 +55,7 @@ $app = new Application($resolver, new Middleware\NotFoundHandler());
 $app->pipe($container->get(Middleware\ErrorHandlerMiddleware::class));
 $app->pipe(Middleware\CredentialsMiddleware::class);
 $app->pipe(Middleware\ProfilerMiddleware::class);
-$app->pipe(new Framework\Http\Middleware\RouteMiddleware($router));
+$app->pipe(new Framework\Http\Middleware\RouteMiddleware($container->get(RouterInterface::class)));
 
 $app->pipe('cabinet', $container->get(Middleware\BasicAuthMiddleware::class));
 
