@@ -7,6 +7,7 @@ error_reporting(E_ALL);
 use App\Http\Action;
 use App\Http\Middleware;
 use Framework\Http\Application;
+use Framework\Container\Container;
 use Framework\Http\Pipeline\MiddlewareResolver;
 use Framework\Http\Router\AuraRouterAdapter;
 use Zend\Diactoros\Response;
@@ -16,13 +17,14 @@ use Zend\Diactoros\ServerRequestFactory;
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
-$params = [
+$container = new Container();
+$container->set('config', [
     'debug' => true,
     'users' => [
         'admin' => 'adminpass',
         'user' => 'userpass'
         ],
-    ];
+    ]);
 
 $aura = new Aura\Router\RouterContainer();
 $routes = $aura->getMap();
@@ -41,12 +43,12 @@ $resolver = new MiddlewareResolver(new Response());
 $app = new Application($resolver, new Middleware\NotFoundHandler());
 
 
-$app->pipe(new Middleware\ErrorHandlerMiddleware($params['debug']));
+$app->pipe(new Middleware\ErrorHandlerMiddleware($container->get('config')['debug']));
 $app->pipe(Middleware\CredentialsMiddleware::class);
 $app->pipe(Middleware\ProfilerMiddleware::class);
 $app->pipe(new Framework\Http\Middleware\RouteMiddleware($router));
 
-$app->pipe('cabinet', new Middleware\BasicAuthMiddleware($params['users']));
+$app->pipe('cabinet', new Middleware\BasicAuthMiddleware($container->get('config')['users']));
 
 $app->pipe(new Framework\Http\Middleware\DispatchMiddleware($resolver));
 
