@@ -51,10 +51,7 @@ $container->set(RouterInterface::class, function(Container $container) {
     return new AuraRouterAdapter($aura);
 });
 
-$resolver = $container->get(MiddlewareResolver::class);
-
-$app = new Application($resolver, new Middleware\NotFoundHandler());
-
+$app = new Application($container->get(MiddlewareResolver::class), new Middleware\NotFoundHandler());
 
 $app->pipe($container->get(Middleware\ErrorHandlerMiddleware::class));
 $app->pipe(Middleware\CredentialsMiddleware::class);
@@ -63,7 +60,7 @@ $app->pipe(new Framework\Http\Middleware\RouteMiddleware($container->get(RouterI
 
 $app->pipe('cabinet', $container->get(Middleware\BasicAuthMiddleware::class));
 
-$app->pipe(new Framework\Http\Middleware\DispatchMiddleware($resolver));
+$app->pipe(new Framework\Http\Middleware\DispatchMiddleware($container->get(MiddlewareResolver::class)));
 
 
 //Извлекаем $request из суперглобальных массивов $_GET и т.д.
