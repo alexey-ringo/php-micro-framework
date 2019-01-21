@@ -14,10 +14,15 @@ use Framework\Http\Router\RouterInterface;
 use Zend\Diactoros\Response;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
+use App\Http\Middleware\BasicAuthMiddleware;
+use App\Http\Middleware\ErrorHandlerMiddleware;
+use Framework\Http\Middleware\DispatchMiddleware;
+use Framework\Http\Middleware\RouteMiddleware;
 
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
+### Configuration
 $container = new Container();
 $container->set('config', [
     'debug' => true,
@@ -27,16 +32,24 @@ $container->set('config', [
         ],
     ]);
 
-$container->set(Middleware\BasicAuthMiddleware::class, function(Container $container) {
-    return new Middleware\BasicAuthMiddleware($container->get('config')['users']);
+$container->set(BasicAuthMiddleware::class, function(Container $container) {
+    return new BasicAuthMiddleware($container->get('config')['users']);
 });
 
-$container->set(Middleware\ErrorHandlerMiddleware::class, function(Container $container) {
-    return new Middleware\ErrorHandlerMiddleware($container->get('config')['debug']);
+$container->set(ErrorHandlerMiddleware::class, function(Container $container) {
+    return new ErrorHandlerMiddleware($container->get('config')['debug']);
 });
 
 $container->set(MiddlewareResolver::class, function (Container $container) {
     return new MiddlewareResolver(new Response());
+});
+
+$container->set(RouteMiddleware::class, function (Container $container) {
+    return new RouteMiddleware($container->get(RouterInterface::class));
+});
+
+$container->set(DispatchMiddleware::class, function (Container $container) {
+    return new DispatchMiddleware($container->get(MiddlewareResolver::class));
 });
 
 $container->set(RouterInterface::class, function(Container $container) {
@@ -51,16 +64,23 @@ $container->set(RouterInterface::class, function(Container $container) {
     return new AuraRouterAdapter($aura);
 });
 
-$app = new Application($container->get(MiddlewareResolver::class), new Middleware\NotFoundHandler());
+$container->set(Application::class, function (Container $container) {
+    return new Application($container->get(MiddlewareResolver::class), 
+            new Middleware\NotFoundHandler());
+});
 
-$app->pipe($container->get(Middleware\ErrorHandlerMiddleware::class));
+### Initialization
+/** @var Application $app */
+$app = $container->get(Application::class);
+
+$app->pipe($container->get(ErrorHandlerMiddleware::class));
 $app->pipe(Middleware\CredentialsMiddleware::class);
 $app->pipe(Middleware\ProfilerMiddleware::class);
-$app->pipe(new Framework\Http\Middleware\RouteMiddleware($container->get(RouterInterface::class)));
+$app->pipe($container->get(RouteMiddleware::class));
 
-$app->pipe('cabinet', $container->get(Middleware\BasicAuthMiddleware::class));
+$app->pipe('cabinet', $container->get(BasicAuthMiddleware::class));
 
-$app->pipe(new Framework\Http\Middleware\DispatchMiddleware($container->get(MiddlewareResolver::class)));
+$app->pipe($container->get(DispatchMiddleware::class));
 
 
 //Извлекаем $request из суперглобальных массивов $_GET и т.д.
