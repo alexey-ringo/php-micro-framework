@@ -40,7 +40,7 @@ $container->set(ErrorHandlerMiddleware::class, function(Container $container) {
     return new ErrorHandlerMiddleware($container->get('config')['debug']);
 });
 
-$container->set(MiddlewareResolver::class, function (Container $container) {
+$container->set(MiddlewareResolver::class, function () {
     return new MiddlewareResolver(new Response());
 });
 
@@ -52,7 +52,7 @@ $container->set(DispatchMiddleware::class, function (Container $container) {
     return new DispatchMiddleware($container->get(MiddlewareResolver::class));
 });
 
-$container->set(RouterInterface::class, function(Container $container) {
+$container->set(RouterInterface::class, function() {
     $aura = new Aura\Router\RouterContainer();
     $routes = $aura->getMap();
     $routes->get('home', '/', Action\HelloAction::class);
