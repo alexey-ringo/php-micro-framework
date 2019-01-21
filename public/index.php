@@ -35,6 +35,10 @@ $container->set(Middleware\ErrorHandlerMiddleware::class, function(Container $co
     return new Middleware\ErrorHandlerMiddleware($container->get('config')['debug']);
 });
 
+$container->set(MiddlewareResolver::class, function (Container $container) {
+    return new MiddlewareResolver(new Response());
+});
+
 $container->set(RouterInterface::class, function(Container $container) {
     $aura = new Aura\Router\RouterContainer();
     $routes = $aura->getMap();
@@ -47,7 +51,7 @@ $container->set(RouterInterface::class, function(Container $container) {
     return new AuraRouterAdapter($aura);
 });
 
-$resolver = new MiddlewareResolver(new Response());
+$resolver = $container->get(MiddlewareResolver::class);
 
 $app = new Application($resolver, new Middleware\NotFoundHandler());
 
