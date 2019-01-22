@@ -5,18 +5,18 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 use Framework\Http\Application;
-use Framework\Container\Container;
 use Zend\HttpHandlerRunner\Emitter\SapiEmitter;
 use Zend\Diactoros\ServerRequestFactory;
+
+/**
+ * @var \Framework\Container\Container $container
+ * @var \Framework\Http\Application $app
+ */
 
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
-### Configuration
-$container = new Container();
-$container->set('config', require 'config/parameters.php');
-require 'config/dependencies.php';
-
+require 'config/container.php';
 
 ### Initialization
 /** @var Application $app */
