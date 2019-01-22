@@ -4,6 +4,7 @@ namespace Framework\Http;
 
 use Framework\Http\Pipeline\MiddlewareResolver;
 use Framework\Http\Router\RouterInterface;
+use Framework\Http\Router\RouteData;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -47,14 +48,20 @@ class Application implements MiddlewareInterface, RequestHandlerInterface {
     }
     
     //Передаем: имя, шаблон пути, обработчик и токены
+    public function route($name, $path, $handler, array $methods, array $options = []): void 
+    {
+        //Объект RouteData хранит структуру данных запроса
+        $this->router->addRoute(new RouteData($name, $path, $handler, $methods, $options));
+    }
+    
     public function get($name, $path, $handler, array $options = []): void 
     {
-        $this->router->addRoute($name, $path, $handler, ['GET'], $options);
+        $this->route($name, $path, $handler, ['GET'], $options);
     }
     
     public function post($name, $path, $handler, array $options = []): void 
     {
-        $this->router->addRoute($name, $path, $handler, ['POST'], $options);
+        $this->route($name, $path, $handler, ['POST'], $options);
     }
     
     public function any($name, $path, $handler, array $options = []): void
@@ -76,9 +83,5 @@ class Application implements MiddlewareInterface, RequestHandlerInterface {
     {
         $this->route($name, $path, $handler, ['DELETE'], $options);
     }
-    //Пользовательский тип маршрута с кастомными (напр - миксированными) методами
-    public function route($name, $pattern, $handler, array $methods, array $options = []): void 
-    {
-        $this->router->addRoute($name, $path, $handler, $methods, $tokens);
-    }
+    
 }

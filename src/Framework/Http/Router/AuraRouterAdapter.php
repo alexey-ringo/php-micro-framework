@@ -55,18 +55,17 @@ class AuraRouterAdapter implements RouterInterface {
         }
     }
     
-    public function addRoute($name, $path, $handler, array $methods, array $options): void
+    public function addRoute(RouteData $data): void
     {
-        $map = $this->aura->getMap();
         //AuraRouter object
         $route = new Route();
         
-        $route->name($name);
-        $route->path($path);
-        $route->handler($handler);
+        $route->name($data->name);
+        $route->path($data->path);
+        $route->handler($data->handler);
         
         //Обход всего массива $options на предмет правильности указания названий ключей
-        foreach ($options as $key => $value) {
+        foreach ($data->options as $key => $value) {
             switch ($key) {
                 case 'tokens':
                     $route->tokens($value);
@@ -78,14 +77,15 @@ class AuraRouterAdapter implements RouterInterface {
                     $route->wildcard($value);
                     break;
                 default:
-                    throw new \InvalidArgumentException('Undefined option "' . $name . '"');
+                    throw new \InvalidArgumentException('Undefined option "' . $key . '"');
             }
         }
         
-        if ($methods) {
+        if ($methods = $data->methods) {
             $route->allows($methods);
         }
         
+        $map = $this->aura->getMap();
         $map->addRoute($route);
     }
 }
