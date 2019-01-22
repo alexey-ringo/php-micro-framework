@@ -81,6 +81,11 @@ class AuraRouterAdapter implements RouterInterface {
                     throw new \InvalidArgumentException('Undefined option "' . $name . '"');
             }
         }
+        
+        if ($methods) {
+            $route->allows($methods);
+        }
+        
         $map->addRoute($route);
     }
 }
