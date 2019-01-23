@@ -24,12 +24,14 @@ class Container {
                     foreach ($constructor->getParameters() as $parameter) {
                         if ($paramClass = $parameter->getClass()) {
                             $arguments[] = $this->get($paramClass->getName()); //Рекурсия, в случае вложенности зависимостей!
+                        //Если параметром конструктора создаваемого класса является массив - отправляем в конструктор пустой массив    
                         } elseif ($parameter->isArray()) {
                             $arguments[] = [];
                         } else {
                             if (!$parameter->isDefaultValueAvailable()) {
                                 throw new ServiceNotFoundException('Unable to resolve "' . $parameter->getName() . '"" in service "' . $id . '"');
                             }
+                            //Если параметром конструктора создаваемого класса является скалярная переменная с дефольным значением
                             $arguments[] = $parameter->getDefaultValue();
                         }
                     }
