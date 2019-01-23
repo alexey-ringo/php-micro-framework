@@ -16,6 +16,7 @@ use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
 use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
 use Zend\Stratigility\Middleware\RequestHandlerMiddleware;
 use Zend\Stratigility\MiddlewarePipe;
+use Framework\Container\Container;
 
 /**
  * Description of ActionResolver
@@ -25,10 +26,12 @@ use Zend\Stratigility\MiddlewarePipe;
 class MiddlewareResolver {
     
     private $responsePrototype;
+    private $container;
     
-    public function __construct(ResponseInterface $responsePrototype)
+    public function __construct(Container $container, ResponseInterface $responsePrototype)
     {
         $this->responsePrototype = $responsePrototype;
+        $this->container = $container;
     }
     
     
@@ -40,7 +43,7 @@ class MiddlewareResolver {
         
         if (\is_string($handler)) {
             return new CallableMiddlewareDecorator(function (ServerRequestInterface $request, RequestHandlerInterface $next) use ($handler) {
-                $middleware = $this->resolve(new $handler());
+                $middleware = $this->resolve($this->container->get($handler));
                 return $middleware->process($request, $next);
             });
         }

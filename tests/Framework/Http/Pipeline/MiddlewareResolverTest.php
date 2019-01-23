@@ -7,6 +7,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Tests\Framework\Http\DummyContainer;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Response\EmptyResponse;
 use Zend\Diactoros\Response\HtmlResponse;
@@ -20,7 +21,7 @@ class MiddlewareResolverTest extends TestCase
      */
     public function testDirect($handler): void
     {
-        $resolver = new MiddlewareResolver(new Response());
+        $resolver = new MiddlewareResolver(new DummyContainer(), new Response());
         $middleware = $resolver->resolve($handler);
         /** @var ResponseInterface $response */
         $response = $middleware->process(
@@ -36,7 +37,7 @@ class MiddlewareResolverTest extends TestCase
      */
     public function testNext($handler): void
     {
-        $resolver = new MiddlewareResolver(new Response());
+        $resolver = new MiddlewareResolver(new DummyContainer(), new Response());
         $middleware = $resolver->resolve($handler);
         /** @var ResponseInterface $response */
         $response = $middleware->process(
@@ -74,7 +75,7 @@ class MiddlewareResolverTest extends TestCase
     
     public function testHandler(): void
     {
-        $resolver = new MiddlewareResolver(new Response());
+        $resolver = new MiddlewareResolver(new DummyContainer(), new Response());
         $middleware = $resolver->resolve(PsrHandler::class);
         $response = $middleware->process(
             (new ServerRequest())->withAttribute('attribute', $value = 'value'),
@@ -85,7 +86,7 @@ class MiddlewareResolverTest extends TestCase
     
     public function testArray(): void
     {
-        $resolver = new MiddlewareResolver(new Response());
+        $resolver = new MiddlewareResolver(new DummyContainer(), new Response());
         $middleware = $resolver->resolve([
             new DummyMiddleware(),
             new SinglePassMiddleware()

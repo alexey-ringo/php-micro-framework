@@ -11,9 +11,9 @@ use App\Http\Middleware\BasicAuthMiddleware;
 /** @var \Framework\Container\Container $container */
 /** @var \Framework\Http\Application $app */
 
-$app->pipe($container->get(ErrorHandlerMiddleware::class));
+$app->pipe(ErrorHandlerMiddleware::class);
 $app->pipe(CredentialsMiddleware::class);
 $app->pipe(ProfilerMiddleware::class);
-$app->pipe($container->get(RouteMiddleware::class));
-$app->pipe('cabinet', $container->get(BasicAuthMiddleware::class));
-$app->pipe($container->get(DispatchMiddleware::class));
+$app->pipe(RouteMiddleware::class);
+$app->pipe('cabinet', BasicAuthMiddleware::class);
+$app->pipe(DispatchMiddleware::class);
