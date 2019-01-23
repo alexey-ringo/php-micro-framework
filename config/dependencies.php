@@ -15,33 +15,29 @@ use App\Http\Middleware\NotFoundHandler;
 
 /** @var Container $container */
 
-$container->set(BasicAuthMiddleware::class, function(Container $container) {
-    return new BasicAuthMiddleware($container->get('config')['users']);
-});
-
-$container->set(ErrorHandlerMiddleware::class, function(Container $container) {
-    return new ErrorHandlerMiddleware($container->get('config')['debug']);
-});
-
-$container->set(MiddlewareResolver::class, function (Container $container) {
-    return new MiddlewareResolver($container, new Response());
-});
-
-$container->set(RouteMiddleware::class, function (Container $container) {
-    return new RouteMiddleware($container->get(RouterInterface::class));
-});
-
-$container->set(DispatchMiddleware::class, function (Container $container) {
-    return new DispatchMiddleware($container->get(MiddlewareResolver::class));
+$container->set(Application::class, function (Container $container) {
+    return new Application(
+        $container->get(MiddlewareResolver::class),
+        $container->get(RouterInterface::class),
+        new NotFoundHandler());
 });
 
 $container->set(RouterInterface::class, function() {
     return new AuraRouterAdapter(new Aura\Router\RouterContainer());
 });
 
-$container->set(Application::class, function (Container $container) {
-    return new Application(
-        $container->get(MiddlewareResolver::class),
-        $container->get(RouterInterface::class),
-        new NotFoundHandler());
+$container->set(MiddlewareResolver::class, function (Container $container) {
+    return new MiddlewareResolver($container, new Response());
+});
+
+
+
+//Оставляем указание зависимостей явным образом, поскольку autoworing в Контейнере
+//не может восстановить значение массивов, передаваемых в конструкторы этих посредников
+$container->set(BasicAuthMiddleware::class, function(Container $container) {
+    return new BasicAuthMiddleware($container->get('config')['users']);
+});
+
+$container->set(ErrorHandlerMiddleware::class, function(Container $container) {
+    return new ErrorHandlerMiddleware($container->get('config')['debug']);
 });

@@ -40,7 +40,7 @@ class MiddlewareResolver {
         if (\is_array($handler)) {
             return $this->createPipe($handler);
         }
-        
+        //Если в Контейнере уже есть обхект по строке этого класса и Контейнер может создать такой объект
         if (\is_string($handler) && $this->container->has($handler)) {
             return new CallableMiddlewareDecorator(function (ServerRequestInterface $request, RequestHandlerInterface $next) use ($handler) {
                 $middleware = $this->resolve($this->container->get($handler));

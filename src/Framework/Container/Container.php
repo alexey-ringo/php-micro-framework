@@ -17,8 +17,27 @@ class Container {
         if(!array_key_exists($id, $this->definitions)) {
             //Но такой класс существует в проекте
             if (class_exists($id)) {
-                //то создаем простой объект этого класса (с пустым конструктором) и записываем его в кэш-массив
-                return $this->results[$id] = new $id();
+                $reflection = new \ReflectionClass($id);
+                
+                $arguments = [];
+                if (($constructor = $reflection->getConstructor()) !== null) {
+                    foreach ($constructor->getParameters() as $parameter) {
+                        if ($paramClass = $parameter->getClass()) {
+                            $arguments[] = $this->get($paramClass->getName()); //Рекурсия, в случае вложенности зависимостей!
+                        } elseif ($parameter->isArray()) {
+                            $arguments[] = [];
+                        } else {
+                            if (!$parameter->isDefaultValueAvailable()) {
+                                throw new ServiceNotFoundException('Unable to resolve "' . $parameter->getName() . '"" in service "' . $id . '"');
+                            }
+                            $arguments[] = $parameter->getDefaultValue();
+                        }
+                    }
+                }
+                $this->results[$id] = $reflection->newInstanceArgs($arguments);
+                
+                //то создаем объект этого класса с автоматисчески заполненным конструктором и записываем его в кэш-массив
+                return $this->results[$id];
             }
             throw new ServiceNotFoundException('Unknown service "' . $id . '"');
         }
