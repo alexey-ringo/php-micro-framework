@@ -12,10 +12,6 @@ use Zend\Diactoros\Response;
 use App\Http\Middleware\BasicAuthMiddleware;
 use App\Http\Middleware\ErrorHandlerMiddleware;
 use App\Http\Middleware\NotFoundHandler;
-########################################
-use App\Http\Middleware\CredentialsMiddleware;
-use App\Http\Middleware\ProfilerMiddleware;
-use App\Http\Action;
 
 /** @var Container $container */
 
@@ -48,28 +44,4 @@ $container->set(Application::class, function (Container $container) {
         $container->get(MiddlewareResolver::class),
         $container->get(RouterInterface::class),
         new NotFoundHandler());
-});
-
-######################################################################
-
-$container->set(CredentialsMiddleware::class, function () {
-    return new CredentialsMiddleware();
-});
-$container->set(ProfilerMiddleware::class, function () {
-    return new ProfilerMiddleware();
-});
-$container->set(Action\HelloAction::class, function () {
-    return new Action\HelloAction();
-});
-$container->set(Action\AboutAction::class, function () {
-    return new Action\AboutAction();
-});
-$container->set(Action\CabinetAction::class, function () {
-    return new Action\CabinetAction();
-});
-$container->set(Action\Blog\IndexAction::class, function () {
-    return new Action\Blog\IndexAction();
-});
-$container->set(Action\Blog\ShowAction::class, function () {
-    return new Action\Blog\ShowAction();
 });
