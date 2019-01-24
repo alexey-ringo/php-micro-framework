@@ -16,7 +16,7 @@ use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
 use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
 use Zend\Stratigility\Middleware\RequestHandlerMiddleware;
 use Zend\Stratigility\MiddlewarePipe;
-use Framework\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 
 /**
  * Description of ActionResolver
