@@ -16,7 +16,7 @@ use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
 use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
 use Zend\Stratigility\Middleware\RequestHandlerMiddleware;
 use Zend\Stratigility\MiddlewarePipe;
-use Framework\Container\Container;
+use Framework\Container\ContainerInterface;
 
 /**
  * Description of ActionResolver
@@ -28,7 +28,7 @@ class MiddlewareResolver {
     private $responsePrototype;
     private $container;
     
-    public function __construct(Container $container, ResponseInterface $responsePrototype)
+    public function __construct(ContainerInterface $container, ResponseInterface $responsePrototype)
     {
         $this->responsePrototype = $responsePrototype;
         $this->container = $container;
