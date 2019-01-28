@@ -26,8 +26,8 @@ class RegexpRoute implements RouteInterface {
         $this->name = $name;
         $this->pattern = $pattern;
         $this->handler = $handler;
-        $this->tokens = $tokens;
         $this->methods = $methods;
+        $this->tokens = $tokens;
     }
     
     public function match(ServerRequestInterface $request): ?Result {

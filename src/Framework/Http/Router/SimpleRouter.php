@@ -10,6 +10,8 @@ namespace Framework\Http\Router;
 
 use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Framework\Http\Router\Exception\RouteNotFoundException;
+use Framework\Http\Router\Route\RegexpRoute;
+use Framework\Http\Router\Route\RouteInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -24,6 +26,7 @@ class SimpleRouter implements RouterInterface {
     public function __construct(RouteCollection $routes) {
         $this->routes = $routes;
     }
+    
     
     //Принимает реквест, обходит все имеющиеся маршруты, матчит на соответствие со всеми правилами
     //и возврящает распарсенный результат в Result
@@ -48,6 +51,11 @@ class SimpleRouter implements RouterInterface {
             }
         }
         throw new RouteNotFoundException($name, $params);
+    }
+    
+    public function addRoute(RouteData $data): void
+    {
+        $this->routes->addRoute(new RegexpRoute($data->name, $data->path, $data->handler, $data->methods, $data->options));
     }
 
 }
