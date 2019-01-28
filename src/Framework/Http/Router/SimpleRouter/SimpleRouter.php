@@ -6,12 +6,15 @@
  * and open the template in the editor.
  */
 
-namespace Framework\Http\Router;
+namespace Framework\Http\Router\SimpleRouter;
 
 use Framework\Http\Router\Exception\RequestNotMatchedException;
 use Framework\Http\Router\Exception\RouteNotFoundException;
-use Framework\Http\Router\Route\RegexpRoute;
-use Framework\Http\Router\Route\RouteInterface;
+use Framework\Http\Router\RouterInterface;
+use Framework\Http\Router\SimpleRouter\RouteCollection;
+use Framework\Http\Router\SimpleRouter\Route\RegexpRoute;
+use Framework\Http\Router\Result;
+use Framework\Http\Router\RouteData;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**

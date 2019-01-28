@@ -6,7 +6,7 @@
  * and open the template in the editor.
  */
 
-namespace Framework\Http\Router\Route;
+namespace Framework\Http\Router\SimpleRouter\Route;
 
 use Framework\Http\Router\Result;
 use Psr\Http\Message\ServerRequestInterface;

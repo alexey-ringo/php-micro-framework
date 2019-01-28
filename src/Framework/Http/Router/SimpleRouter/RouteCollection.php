@@ -6,10 +6,11 @@
  * and open the template in the editor.
  */
 
-namespace Framework\Http\Router;
+namespace Framework\Http\Router\SimpleRouter;
 
-use Framework\Http\Router\Route\RegexpRoute;
-use Framework\Http\Router\Route\RouteInterface;
+use Framework\Http\Router\SimpleRouter\Route\RegexpRoute;
+use Framework\Http\Router\SimpleRouter\Route\RouteInterface;
+
 /**
  * Description of RouteCollection
  *
