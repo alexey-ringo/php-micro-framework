@@ -17,6 +17,7 @@ chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 
 require 'config/container.php';
+//require 'config/simplecontainer.php';
 
 ### Initialization
 /** @var Application $app */

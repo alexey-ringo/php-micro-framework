@@ -1,10 +1,12 @@
 <?php
 
-use Framework\Container\Container;
+use Zend\ServiceManager\ServiceManager;
+
+$config = require __DIR__ . '/config.php';
 
 ### Container Configuration
-$container = new Container(require __DIR__ . '/dependencies.php');
-$container->set('config', require __DIR__ . '/parameters.php');
 
+$container = new ServiceManager($config['dependencies']);
+$container->setService('config', $config);
 
 return $container;
